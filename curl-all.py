@@ -7,7 +7,7 @@ import sys
 
 def main(argv):
   if len(argv) != 4:
-    sys.stderr.write("Usage: %s <list of files> <root url> <dir>\n" % argv[0])
+    sys.stderr.write("Usage: %s <list of files.txt> <root url> <output directory>\n" % argv[0])
     return 1
 
   fname = argv[1]
