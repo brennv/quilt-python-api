@@ -9,7 +9,7 @@ from requests.auth import HTTPBasicAuth
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Create a table with columns.')
-    parser.add_argument('-l', '--location', default='http://localhost:8000', help='API URL.')
+    parser.add_argument('-l', '--location', default='http://localhost:5000', help='API URL.')
     parser.add_argument('-u', '--user', default=os.environ['USER'], help='Quilt user')
     parser.add_argument('-t', '--table', default='test_table', help='Table name')
     parser.add_argument('-d', '--description', default='', help='Table description')
@@ -18,8 +18,7 @@ def main(argv):
     passwd = getpass.getpass()
 
     h = {"Content-Type": "application/json",
-         "Accept": "application/json",
-         }
+         "Accept": "application/json"}
 
     table_schema = {
         "name" : args.table,
