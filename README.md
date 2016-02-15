@@ -4,7 +4,7 @@
 3. Unzip downloaded files (if needed)
         cd downloads
         gunzip *.gz
-4. `python create_data_set.py --help`
+4. `python data_set.py --help`
 
 
 # File formats in this example
