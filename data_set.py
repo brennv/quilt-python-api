@@ -70,7 +70,7 @@ def main(argv):
 
 def check_response(response, msg): 
   if response.status_code != 200:
-    print '%s: %s\n\t%s' % (msg, response, response.text)
+    sys.stderr.write('%s: %s\n\t%s\n' % (msg, response, response.text))
 
 
 if __name__ == "__main__":

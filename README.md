@@ -4,7 +4,10 @@
 3. Unzip downloaded files (if needed)
         cd downloads
         gunzip *.gz
-4. `python data_set.py --help`
+4. Use `data_set.py` to create data sets (see `python data_set.py --help`)
+```bash
+python data_set.py -e http://quiltdata.com -u USERNAME -n "ENCODE data" -d "#script upload" -f downloads/wgEncodeBroadHistoneNhaH3k36me3StdPk.broadPeak
+```
 
 
 # File formats in this example
