@@ -6,7 +6,12 @@
         gunzip *.gz
 4. Use `data_set.py` to create data sets (see `python data_set.py --help`)
 ```bash
-python data_set.py -e http://quiltdata.com -u USERNAME -n "ENCODE data" -d "#script upload" -f downloads/wgEncodeBroadHistoneNhaH3k36me3StdPk.broadPeak
+python data_set.py
+  -e http://quiltdata.com
+  -u USERNAME
+  -n "ENCODE data"
+  -d "#Histone peak data"
+  -f downloads/wgEncodeBroadHistoneNhaH3k36me3StdPk.broadPeak
 ```
 
 
