@@ -1,8 +1,6 @@
 import argparse
-import boto3
 import getpass
 import json
-import mimetypes
 import os
 import requests
 import sys
@@ -24,14 +22,10 @@ def main(argv):
   passwd = getpass.getpass()
 
 
+  #get_upload_url fetch signed URL from backend
   def get_upload_url(file_name, file_type='text/plain'):
-    data =  {
-      'fileName': file_name,
-      'fileType': file_type
-    }
-    print data
+    data = {'fileName': file_name, 'fileType': file_type}
     endpoint = "%s/s3args/" % (args.endpoint)
-
     return requests.get(endpoint,
               auth=HTTPBasicAuth(args.user, passwd),
               params=data,
@@ -39,12 +33,10 @@ def main(argv):
   #end get_upload_url
 
 
-  #get signed S3 URL
   file_name = os.path.basename(args.file)
-  file_type = mimetypes.guess_type(file_name)[0]
+  #get signed S3 URL
   response = get_upload_url(file_name)
-  if response.status_code != 200:
-    print 's3 signing error: %s' % (response.text)
+  check_response(response, 'problem signing file')
   signature = json.loads(response.json())
   #request header
   headers = {
@@ -52,25 +44,32 @@ def main(argv):
     'x-amz-acl': signature['x-amz-acl']
   }
   destination = signature['signed_request']
-  #schema (columns is required)
+  #local file handle
+  files = {file_name: open(args.file, 'r')}
+  #upload file
+  upload = requests.put(destination, files=files, headers=headers)
+  check_response(upload, 's3 signing error')
+  #assemble schema (columns is required)
   schema = {
     'csvfile': signature['path'],
     'name': args.name,
     'description': args.description,
     'columns': [],
     'is_public': args.public
-  }  
-  #local file
-  files = {file_name: open(args.file, 'r')}
-  #upload/put file with request headers
-  print files[file_name].readline();
-  print destination
-  print files
-  print headers
-  upload = requests.put(destination, files=files, headers=headers)
-  if upload.status_code != 200:
-    print 's3 signing error: %s' % (response.text)
+  }
+  #create data set
+  endpoint = "%s/tables/" % (args.endpoint)
+  create = requests.post(endpoint,
+    auth=HTTPBasicAuth(args.user, passwd),
+    data=json.dumps(schema),
+    headers=HEADERS)
+  check_response(create, 'problem creating data set')
 #end main
+
+
+def check_response(response, msg): 
+  if response.status_code != 200:
+    print '%s: %s' % (msg, response)
 
 
 if __name__ == "__main__":
