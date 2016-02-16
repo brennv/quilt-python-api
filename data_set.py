@@ -9,10 +9,7 @@ import sys
 
 from requests.auth import HTTPBasicAuth
 
-HEADERS = {
-  "Content-Type": "application/json",
-  "Accept": "application/json"
-}
+HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
 
 
 def main(argv):
@@ -45,14 +42,15 @@ def main(argv):
   #get signed S3 URL
   file_name = os.path.basename(args.file)
   file_type = mimetypes.guess_type(file_name)[0]
-  response = get_upload_url(file_name, file_type)
+  response = get_upload_url(file_name)
   if response.status_code != 200:
     print 's3 signing error: %s' % (response.text)
   signature = json.loads(response.json())
   #request header
-  headers = HEADERS.copy()
-  headers['Content-Type'] = 'text/plain'
-  headers['x-amz-acl'] = signature['x-amz-acl']
+  headers = {
+    'Content-Type': 'text/plain',
+    'x-amz-acl': signature['x-amz-acl']
+  }
   destination = signature['signed_request']
   #schema (columns is required)
   schema = {
@@ -65,6 +63,7 @@ def main(argv):
   #local file
   files = {file_name: open(args.file, 'r')}
   #upload/put file with request headers
+  print files[file_name].readline();
   print destination
   print files
   print headers
