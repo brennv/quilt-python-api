@@ -45,9 +45,10 @@ def main(argv):
   }
   destination = signature['signed_request']
   #local file handle
-  files = {file_name: open(args.file, 'r')}
+  files = {file_name: open(args.file, 'rb')}
+  data = open(args.file, 'rb')
   #upload file
-  upload = requests.put(destination, files=files, headers=headers)
+  upload = requests.put(destination, data=data, headers=headers)
   check_response(upload, 's3 signing error')
   #assemble schema (columns is required)
   schema = {
@@ -69,7 +70,7 @@ def main(argv):
 
 def check_response(response, msg): 
   if response.status_code != 200:
-    print '%s: %s' % (msg, response)
+    print '%s: %s\n\t%s' % (msg, response, response.text)
 
 
 if __name__ == "__main__":
