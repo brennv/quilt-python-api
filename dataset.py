@@ -12,7 +12,6 @@ HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
 
 
 def create(argv):
-  print argv
   parser = argparse.ArgumentParser(description='Create a Quilt data set.')
   parser.add_argument('-e', '--endpoint', default='https://quiltdata.com', help='API endpoint root URL (without terminating "/")')
   parser.add_argument('-u', '--user', default=os.environ['USER'], help='Quilt username')
@@ -22,9 +21,12 @@ def create(argv):
   parser.add_argument('-p', '--public', default=False, help='True for public, False for private. Private is default.')
   parser.add_argument('-x', '--password', default=None, help='Password. NOT for commandline use, as password will be in shell history.')
   args = parser.parse_args(argv)
+
+  passwd = None
   if(args.password == None):
     passwd = getpass.getpass()
-
+  else:
+    passwd = args.password
 
   #get_upload_url fetch signed URL from backend
   def get_upload_url(file_name, file_type='text/plain'):
