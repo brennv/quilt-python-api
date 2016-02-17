@@ -4,8 +4,8 @@
 3. Unzip downloaded files (if needed)
         cd downloads
         gunzip *.gz
-4. Use `data_set.py` to create data sets (see `python data_set.py --help`).
-You will need a Quilt username and password.
+4. Use `data_set.py` to create individual data sets (see `python data_set.py --help`).
+You will need a Quilt username and password. Or use `batch.py` to create multiple data sets.
 ```bash
 python data_set.py
   -e http://quiltdata.com
@@ -14,8 +14,6 @@ python data_set.py
   -d "#Histone peak data"
   -f downloads/wgEncodeBroadHistoneNhaH3k36me3StdPk.broadPeak
 ```
-5. `process-lines.py` calls `data_set.py` on each line of an input file.
-
 
 # File formats in this example
 * [ENCDOE broadPeak format](https://genome.ucsc.edu/FAQ/FAQformat.html#format13)
