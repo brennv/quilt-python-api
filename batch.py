@@ -4,6 +4,7 @@ import os
 import re
 import shlex
 import sys
+import time
 
 import dataset
 
@@ -11,6 +12,7 @@ ENDPOINT = 'https://quilt-heroku.herokuapp.com/'
 CORE_TAGS = ['Human', 'ENCODE', 'ChIP_seq', 'hg19']
 CORE_DESC = 'Sources\nhttps://www.encodeproject.org/\nhttp://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeBroadHistone/'
 PUBLIC = True
+WAIT = 60 
 
 def process(argv):
   if len(argv) != 2:
@@ -30,10 +32,11 @@ def process(argv):
     pretags.remove('Broad')
     tags = map(lambda x: '#' + x, CORE_TAGS + pretags)
     description = ' '.join(tags) + '\n' + CORE_DESC
-    args = "-u akarve -n %s -d '%s' -f downloads/%s -p True -x '%s'" % (name, description, l, passwd)
+    args = "-u akarve -n '%s' -d '%s' -f downloads/%s -p True -x '%s'" % (' '.join(pretags), description, l, passwd)
     argv = shlex.split(args)
     #create data set on Quilt 
     dataset.create(argv)
+    time.sleep(WAIT)
 
   return 1
 
