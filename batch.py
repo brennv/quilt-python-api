@@ -1,5 +1,4 @@
-#!/path/to/python
-
+#!/usr/bin/python
 import os
 import re
 import sys

@@ -1,5 +1,4 @@
-#!/path/to/python
-
+#!/usr/bin/python
 import re
 from subprocess import call
 import sys

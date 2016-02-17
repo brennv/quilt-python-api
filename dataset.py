@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import argparse
 import getpass
 import json
@@ -10,16 +11,19 @@ from requests.auth import HTTPBasicAuth
 HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
 
 
-def main(argv):
+def create(argv):
+  print argv
   parser = argparse.ArgumentParser(description='Create a Quilt data set.')
   parser.add_argument('-e', '--endpoint', default='https://quiltdata.com', help='API endpoint root URL (without terminating "/")')
   parser.add_argument('-u', '--user', default=os.environ['USER'], help='Quilt username')
   parser.add_argument('-n', '--name', default='test_data_set', help='Data set name')
   parser.add_argument('-d', '--description', default='', help='Data set description')
   parser.add_argument('-f', '--file', default='', help='Path to CSV, TXT, TSV, BED, or other supported format')
-  parser.add_argument('-p', '--public', default=False, help='Publicly visible? (True or False). Default=False.')
+  parser.add_argument('-p', '--public', default=False, help='True for public, False for private. Private is default.')
+  parser.add_argument('-x', '--password', default=None, help='Password. NOT for commandline use, as password will be in shell history.')
   args = parser.parse_args(argv)
-  passwd = getpass.getpass()
+  if(args.password == None):
+    passwd = getpass.getpass()
 
 
   #get_upload_url fetch signed URL from backend
@@ -74,4 +78,4 @@ def check_response(response, msg):
 
 
 if __name__ == "__main__":
-  main(sys.argv[1:])
+  create(sys.argv[1:])
