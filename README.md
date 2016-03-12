@@ -10,7 +10,7 @@
 You will need a Quilt username and password. Or use `batch.py` to create multiple data sets.
 ```bash
 python data_set.py
-  -e http://quiltdata.com
+  -e https://quiltdata.com
   -u USERNAME
   -n "ENCODE data"
   -d "#Histone peak data"
