@@ -2,10 +2,10 @@
 1. Get a list of files you want to upload (see `files-to-download/`)
 2. Download the files in the list (see `curl-all.py`)
 3. Unzip downloaded files (if needed)
-
-        cd downloads
-        gunzip *.gz
-
+```bash
+cd downloads
+gunzip *.gz
+```
 4. Use `data_set.py` to create individual data sets (see `python data_set.py --help`).
 You will need a Quilt username and password. Or use `batch.py` to create multiple data sets.
 ```bash
