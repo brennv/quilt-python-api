@@ -15,7 +15,7 @@ python data_set.py
   -e https://quiltdata.com
   -u USERNAME
   -n "ENCODE data"
-  -d "#Histone peak data"
+  -d "#A549 #histone peak data #hg19"
   -f downloads/wgEncodeBroadHistoneNhaH3k36me3StdPk.broadPeak
 ```
 
