@@ -12,7 +12,7 @@ ENDPOINT = 'https://quilt-heroku.herokuapp.com/'
 CORE_TAGS = ['Human', 'ENCODE', 'ChIPseq', 'hg19', 'Histone', 'BroadPeak']
 CORE_DESC = 'Sources\nhttps://www.encodeproject.org/\nhttp://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeBroadHistone/'
 PUBLIC = True
-WAIT = 40 
+WAIT = 20 #time (in seconds) to wait between uploads 
 
 def process(argv):
   if len(argv) != 2:
