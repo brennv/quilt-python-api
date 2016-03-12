@@ -1,6 +1,6 @@
 # Convert files to live data sets on Quilt
 ## Optional prep (your steps may vary)
-1. Get a list of files you want to upload (see `files-to-download/`)
+1. Get a list of files you want to upload (see `get-files-to-upload/`)
 2. Download the files in the list (see `curl-all.py`)
 3. Unzip downloaded files (if needed)
 ```bash
