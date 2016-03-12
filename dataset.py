@@ -19,7 +19,7 @@ def create(argv):
   parser.add_argument('-d', '--description', default='', help='Data set description')
   parser.add_argument('-f', '--file', default='', help='Path to CSV, TXT, TSV, BED, or other supported format')
   parser.add_argument('-p', '--public', default=False, help='True for public, False for private. Private is default.')
-  parser.add_argument('-x', '--password', default=None, help='Password. NOT for commandline use, as password will be in shell history.')
+  parser.add_argument('-x', '--password', default=None, help='Password. NOT for commandline use, as password would remain in shell history.')
   args = parser.parse_args(argv)
 
   passwd = None
