@@ -12,7 +12,7 @@ ENDPOINT = 'https://quilt-heroku.herokuapp.com/'
 CORE_TAGS = ['Human', 'ENCODE', 'ChIPseq', 'hg19', 'Histone', 'BroadPeak']
 CORE_DESC = 'Sources\nhttps://www.encodeproject.org/\nhttp://hgdownload.cse.ucsc.edu/goldenPath/hg19/encodeDCC/wgEncodeBroadHistone/'
 PUBLIC = True
-WAIT = 80 
+WAIT = 40 
 
 def process(argv):
   if len(argv) != 2:
@@ -39,8 +39,8 @@ def process(argv):
     args = "-u akarve -n '%s' -d '%s' -f downloads/%s -p True -x '%s'" % (name, description, l, passwd)
     argv = shlex.split(args)
     #create data set on Quilt 
-    print 'starting %s' % (l)
     dataset.create(argv)
+    print '%s' % (l)
     #don't hammer
     time.sleep(WAIT)
 
