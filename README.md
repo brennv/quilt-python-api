@@ -51,8 +51,8 @@ Data:
  'description' : (optional) Column description,
  'type' : <Choose from: ['String', 'Number', 'Image', 'Text']>},
 
-List all tables (owned by current user):
-GET /tables
+List/search tables accessible to current user:
+GET /tables ? search=term1+term2...
 
 Delete a table:
 DELETE /table/<Table ID>
