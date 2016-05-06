@@ -24,3 +24,78 @@ python data_set.py
 
 # Resources
 * [ENCODE Project](https://www.encodeproject.org/)
+
+
+# Quilt REST API
+
+## Tables
+Create a table with columns:
+POST /tables/
+Data:
+{ 'name' : <Table's Name>,
+  'description' : <Markup-enabled text description of the table's contents>,
+  'columns' : [            
+     {'name' : <Column Name>,
+      'sqlname' : (optional) API/database name for the column,
+      'description' : (optional) Column description,
+      'type' : <Choose from: ['String', 'Number', 'Image', 'Text']>}, ...
+      ]
+}
+Returns table definition (e.g. as JSON). The response includes 'id', the table's identifier.
+
+Add a column (to an existing table):
+POST /tables/<Table ID>/columns/
+Data:
+{'name' : <Column Name>,
+ 'sqlname' : (optional) API/database name for the column,
+ 'description' : (optional) Column description,
+ 'type' : <Choose from: ['String', 'Number', 'Image', 'Text']>},
+
+List all tables (owned by current user):
+GET /tables
+
+Delete a table:
+DELETE /table/<Table ID>
+
+Update a table's name/description:
+PATCH /table/<Table ID>
+Data:
+{'name' : <Table's Name>,
+ 'description' : <Markup-enabled text description of the table's contents>
+}
+
+## Table Data
+
+Add rows:
+POST /data/<Table ID>/rows
+
+Data:
+Field keys are the sqlname from the corresponding column.
+[ { key0 : Value0, key1 : Value1, ... },
+  { key0 : Value0, key1 : Value1, ...},
+  ...
+]
+
+Retreive Data:
+GET /data/<Table ID>/rows
+(temporarily limited to 500 rows)
+
+GET /data/<Table ID>/rows/<Row ID>
+
+## Gene Math
+Performs a gene math operation on two tables and creates a new table with the result.
+
+POST /genemath
+Columns are specified by their column id ('id').
+
+Data:
+{'operator' : <Choose from ['Intersect', 'Subtract']>,
+ 'left_chr' : <Chromosome column of left table>,
+ 'left_start' : <Start column of left table>,
+ 'left_end' : <End/stop column of left table>,
+ 'right_chr' : <Chromosome column of right table>,
+ 'right_start' : <Start column of right table>,
+ 'right_end' : <End/stop column of right table>}
+
+
+ 
