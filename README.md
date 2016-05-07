@@ -39,10 +39,10 @@ python data_set.py
 | Delete table | `DELETE /tables/TABLE_ID/` | [See below](#delete-table) |
 | Update table meta-data | `PATCH /table/TABLE_ID` | [See below](#update-table-meta-data) |
 | Add column to table | `POST /tables/TABLE_ID/columns/` | [See below](#add-column-to-table) |
-| Add row to table | `POST /data/TABLE_ID/rows/` | [See below](#append-row) |
-| Get rows | `GET /data/TABLE_ID/rows` | [See below](#get-rows) |
-| Get row | `GET /data/TABLE_ID/rows/ROW_ID` | [See below](#get-row) |
-| Perform genome intersect or subtract | `POST /genemath/` | [See below](#intersect-or-subtract) |
+| Append row to table | `POST /data/TABLE_ID/rows/` | [See below](#append-row) |
+| Get table rows | `GET /data/TABLE_ID/rows` | [See below](#get-rows) |
+| Get table row | `GET /data/TABLE_ID/rows/ROW_ID` | [See below](#get-row) |
+| Genome intersect or subtract | `POST /genemath/` | [See below](#intersect-or-subtract) |
 
 
 
