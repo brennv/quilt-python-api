@@ -53,7 +53,7 @@ python data_set.py
 #### Returns
 Table data as JSON object, includes `id` field with the table's identifier.
 
-### Append column to existing table:
+### Append column to existing table
 `POST /tables/TABLE_ID/columns/`
 #### Data format
 ```javascript
@@ -64,6 +64,8 @@ Table data as JSON object, includes `id` field with the table's identifier.
    'type' : one of 'String', 'Number', 'Image', or 'Text'
 }
 ```
+#### Returns
+Column data as JSON object, includes `id` field with the column's identifier.
 
 
 ### Delete a table
@@ -71,6 +73,7 @@ Table data as JSON object, includes `id` field with the table's identifier.
 
 ### Update table meta-data
 `PATCH /table/TABLE_ID`
+
 #### Data format
 ```javascript
 {
@@ -80,37 +83,51 @@ Table data as JSON object, includes `id` field with the table's identifier.
 ```
 
 ## Table Data
+* Use columns' 'sqlname' as keys in input data.
 
-Add rows:
-POST /data/<Table ID>/rows
+### Add rows to an existing table:
+`POST /data/<Table ID>/rows/`
 
-Data:
-Field keys are the sqlname from the corresponding column.
+#### Data format
+```javascript
 [ { key0 : Value0, key1 : Value1, ... },
-  { key0 : Value0, key1 : Value1, ...},
-  ...
+  { key0 : Value0, key1 : Value1, ...}
 ]
+```
 
-Retreive Data:
-GET /data/<Table ID>/rows
-(temporarily limited to 500 rows)
+### Retreive Row Data
+* Rows are keyed by the Quilt Row ID field 'qrid'
+* (temporarily limited to 500 rows)
 
-GET /data/<Table ID>/rows/<Row ID>
+#### All rows
+`GET /data/<Table ID>/rows`
+
+#### Retrieve row by Row ID
+`GET /data/<Table ID>/rows/<Row ID>`
+
+#### Returns
+Row data as JSON object, keyed by columns' sqlname values.
 
 ## Gene Math
-Performs a gene math operation on two tables and creates a new table with the result.
+* Performs a gene math operation on two tables
+* Creates a new table with the result.
+* Columns are specified by their column id ('id').
 
-POST /genemath
-Columns are specified by their column id ('id').
+### Perform Gene Math Operation
+`POST /genemath`
 
-Data:
+#### Data Format
+```javascript
 {'operator' : <Choose from ['Intersect', 'Subtract']>,
  'left_chr' : <Chromosome column of left table>,
  'left_start' : <Start column of left table>,
  'left_end' : <End/stop column of left table>,
  'right_chr' : <Chromosome column of right table>,
  'right_start' : <Start column of right table>,
- 'right_end' : <End/stop column of right table>}
+ 'right_end' : <End/stop column of right table>
+}
+```
 
-
+#### Returns
+Newly created table object JSON object.
  
