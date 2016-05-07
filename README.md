@@ -33,22 +33,22 @@ python data_set.py
 *Summary*
 
 
-| Action | Endpoint | Data format |
+| Action | Endpoint | Details |
 |--------|----------|-------------|
-| New table | `POST /tables/` | [Format](#data-format)
-| Delete table | `DELETE /tables/TABLE_ID/` |
-| Update table meta-data | `PATCH /table/TABLE_ID` |
-| Add column to table | `POST /tables/TABLE_ID/columns/` |
-| Add row to table | `POST /data/TABLE_ID/rows/` |
-| Get table rows | `GET /data/TABLE_ID/rows` |
-| Get specified row | `GET /data/TABLE_ID/rows/ROW_ID` |
-| Perform genome intersect or subtract | `POST /genemath/` |
+| New table | `POST /tables/` | [See below](#create-table) |
+| Delete table | `DELETE /tables/TABLE_ID/` | [See below](#delete-table) |
+| Update table meta-data | `PATCH /table/TABLE_ID` | [See below](#update-table-meta) |
+| Add column to table | `POST /tables/TABLE_ID/columns/` | [See below](#add-column) |
+| Add row to table | `POST /data/TABLE_ID/rows/` | [See below](#append-row) |
+| Get rows | `GET /data/TABLE_ID/rows` | [See below](#get-rows) |
+| Get row | `GET /data/TABLE_ID/rows/ROW_ID` | [See below](#get-row) |
+| Perform genome intersect or subtract | `POST /genemath/` | [See below](#intersect-or-subtract) |
 
 
 
 
 ## Tables
-### Create new table
+### Create table
 `POST /tables/`
 #### Data format
 ```javascript
@@ -70,7 +70,7 @@ python data_set.py
 #### Returns
 Table data as JSON object, includes `id` field with the table's identifier.
 
-### Add column to existing table
+### Add column to table
 `POST /tables/TABLE_ID/columns/`
 #### Data format
 ```javascript
@@ -85,10 +85,10 @@ Table data as JSON object, includes `id` field with the table's identifier.
 Column data as JSON object, includes `id` field with the column's identifier.
 
 
-### Delete a table
+### Delete table
 `DELETE /table/TABLE_ID`
 
-### Update table meta-data
+### Update table meta
 `PATCH /table/TABLE_ID`
 
 #### Data format
@@ -102,7 +102,7 @@ Column data as JSON object, includes `id` field with the column's identifier.
 ## Table Data
 * Use columns' 'sqlname' as keys in input data.
 
-### Add rows to an existing table:
+### Append row
 `POST /data/TABLE_ID/rows/`
 
 #### Data format
@@ -113,16 +113,15 @@ Column data as JSON object, includes `id` field with the column's identifier.
 ]
 ```
 
-### Retreive Row Data
-* Rows are keyed by the Quilt Row ID field 'qrid'
-
-#### All rows
+### Get rows
 `GET /data/TABLE_ID/rows`
-(NOTE: Currently limited to the first 500 rows)
+* Rows are keyed by the Quilt Row ID field 'qrid'
+* NOTE: Currently limited to the first 500 rows
+#### Returns
+Row data as JSON object, keyed by column.sqlname.
 
-#### Retrieve row by Row ID
+### Get row
 `GET /data/TABLE_ID/rows/ROW_ID`
-
 #### Returns
 Row data as JSON object, keyed by column.sqlname.
 
