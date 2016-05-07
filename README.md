@@ -100,7 +100,7 @@ Column data as JSON object, includes `id` field with the column's identifier.
 ```
 
 ## Table Data
-* Use columns' 'sqlname' as keys in input data.
+* Use column `sqlname` as keys in input data
 
 ### Append row
 `POST /data/TABLE_ID/rows/`
@@ -108,14 +108,14 @@ Column data as JSON object, includes `id` field with the column's identifier.
 #### Data format
 ```javascript
 [
-  {columnSqlname0 : value0, columnSqlname1 : value1, ... },
+  {columnSqlname0: value0, columnSqlname1 : value1, ... },
   ...
 ]
 ```
 
 ### Get rows
 `GET /data/TABLE_ID/rows`
-* Rows are keyed by the Quilt Row ID field 'qrid'
+* Rows are keyed by the Quilt Row ID field `qrid`
 * NOTE: Currently limited to the first 500 rows
 
 #### Returns
@@ -130,7 +130,7 @@ Row data as JSON object, keyed by column.sqlname.
 ## Genome Math
 * Performs a gene math operation on two tables
 * Creates a new table with the result.
-* Columns are specified by column.id.
+* Columns are specified by `column.id`.
 
 ### Intersect or subtract
 `POST /genemath/`
