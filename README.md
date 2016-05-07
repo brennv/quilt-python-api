@@ -117,11 +117,13 @@ Column data as JSON object, includes `id` field with the column's identifier.
 `GET /data/TABLE_ID/rows`
 * Rows are keyed by the Quilt Row ID field 'qrid'
 * NOTE: Currently limited to the first 500 rows
+* 
 #### Returns
 Row data as JSON object, keyed by column.sqlname.
 
 ### Get row
 `GET /data/TABLE_ID/rows/ROW_ID`
+
 #### Returns
 Row data as JSON object, keyed by column.sqlname.
 
