@@ -108,26 +108,26 @@ Column data as JSON object, includes `id` field with the column's identifier.
 #### Returns
 Row data as JSON object, keyed by columns' sqlname values.
 
-## Gene Math
+## Genome Math
 * Performs a gene math operation on two tables
 * Creates a new table with the result.
 * Columns are specified by their column id ('id').
 
-### Perform Gene Math Operation
-`POST /genemath`
+### Intersect or subtract
+`POST /genemath/`
 
 #### Data Format
 ```javascript
-{'operator' : <Choose from ['Intersect', 'Subtract']>,
- 'left_chr' : <Chromosome column of left table>,
- 'left_start' : <Start column of left table>,
- 'left_end' : <End/stop column of left table>,
- 'right_chr' : <Chromosome column of right table>,
- 'right_start' : <Start column of right table>,
- 'right_end' : <End/stop column of right table>
+{
+  'operator': one of 'Intersect' or 'Subtract',
+  'left_chr': integer (column id),
+  'left_start': integer (column id),
+  'left_end':  integer (column id),
+  'right_chr':  integer (column id),
+  'right_start': integer (column id),
+  'right_end':  integer (column id)
 }
 ```
-
 #### Returns
 Newly created table object JSON object.
  
