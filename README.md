@@ -19,50 +19,65 @@ python data_set.py
   -f downloads/wgEncodeBroadHistoneNhaH3k36me3StdPk.broadPeak
 ```
 
-# File formats in this example
+## File formats in this example
 * [ENCDOE broadPeak format](https://genome.ucsc.edu/FAQ/FAQformat.html#format13)
 
-# Resources
+## Resources
 * [ENCODE Project](https://www.encodeproject.org/)
 
 
-# Quilt REST API
+# REST API
+* For all REST calls, the content-type is `application/JSON`.
+* Description fields automatically linkify URLs and support `<a>, <i>, <em>, <strong>, <b>` tags 
 
 ## Tables
-Create a table with columns:
-POST /tables/
-Data:
-{ 'name' : <Table's Name>,
-  'description' : <Markup-enabled text description of the table's contents>,
-  'columns' : [            
-     {'name' : <Column Name>,
-      'sqlname' : (optional) API/database name for the column,
-      'description' : (optional) Column description,
-      'type' : <Choose from: ['String', 'Number', 'Image', 'Text']>}, ...
-      ]
+### Create new table
+`POST /tables/`
+#### Data format
+```javascript
+{
+  'name': string,
+  'description': text `<a>, <i>, <em>, <strong>, <b>` tags supported; automatic linkification of URLs
+  'columns': [
+    {
+      'name': string,
+      'sqlname' : optional string,
+      'description' : optional text,
+      'type' : one of 'String', 'Number', 'Image', 'Text'
+    },
+    ...
+  ]
 }
-Returns table definition (e.g. as JSON). The response includes 'id', the table's identifier.
+```
 
-Add a column (to an existing table):
-POST /tables/<Table ID>/columns/
-Data:
-{'name' : <Column Name>,
- 'sqlname' : (optional) API/database name for the column,
- 'description' : (optional) Column description,
- 'type' : <Choose from: ['String', 'Number', 'Image', 'Text']>},
+#### Returns
+Table data as JSON object, includes `id` field with the table's identifier.
 
-List/search tables accessible to current user:
-GET /tables ? search=term1+term2...
-
-Delete a table:
-DELETE /table/<Table ID>
-
-Update a table's name/description:
-PATCH /table/<Table ID>
-Data:
-{'name' : <Table's Name>,
- 'description' : <Markup-enabled text description of the table's contents>
+### Append column to existing table:
+`POST /tables/TABLE_ID/columns/`
+#### Data format
+```javascript
+{
+   'name': string,
+   'sqlname': optional string,
+   'description' : text,
+   'type' : one of 'String', 'Number', 'Image', or 'Text'
 }
+```
+
+
+### Delete a table
+`DELETE /table/TABLE_ID`
+
+### Update table meta-data
+`PATCH /table/TABLE_ID`
+#### Data format
+```javascript
+{
+   'name': string,
+   'description' : text
+}
+```
 
 ## Table Data
 
