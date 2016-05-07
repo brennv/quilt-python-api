@@ -86,12 +86,13 @@ Column data as JSON object, includes `id` field with the column's identifier.
 * Use columns' 'sqlname' as keys in input data.
 
 ### Add rows to an existing table:
-`POST /data/<Table ID>/rows/`
+`POST /data/TABLE_ID/rows/`
 
 #### Data format
 ```javascript
-[ { key0 : Value0, key1 : Value1, ... },
-  { key0 : Value0, key1 : Value1, ...}
+[
+  {columnSqlname0 : value0, columnSqlname1 : value1, ... },
+  ...
 ]
 ```
 
@@ -100,18 +101,18 @@ Column data as JSON object, includes `id` field with the column's identifier.
 * (temporarily limited to 500 rows)
 
 #### All rows
-`GET /data/<Table ID>/rows`
+`GET /data/TABLE_ID/rows`
 
 #### Retrieve row by Row ID
-`GET /data/<Table ID>/rows/<Row ID>`
+`GET /data/TABLE_ID/rows/ROW_ID`
 
 #### Returns
-Row data as JSON object, keyed by columns' sqlname values.
+Row data as JSON object, keyed by column.sqlname.
 
 ## Genome Math
 * Performs a gene math operation on two tables
 * Creates a new table with the result.
-* Columns are specified by their column id ('id').
+* Columns are specified by column.id.
 
 ### Intersect or subtract
 `POST /genemath/`
@@ -129,5 +130,4 @@ Row data as JSON object, keyed by columns' sqlname values.
 }
 ```
 #### Returns
-Newly created table object JSON object.
- 
+JSON object representing the result table.
