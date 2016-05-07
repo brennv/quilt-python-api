@@ -28,7 +28,24 @@ python data_set.py
 
 # REST API
 * For all REST calls, the content-type is `application/JSON`.
-* Description fields automatically linkify URLs and support `<a>, <i>, <em>, <strong>, <b>` tags 
+* Description fields automatically linkify URLs and support `<a>, <i>, <em>, <strong>, <b>` tags
+
+*Summary*
+
+
+| Action | Endpoint | Data format |
+|--------|----------|-------------|
+| New table | `POST /tables/` | [Format](#data-format)
+| Delete table | `DELETE /tables/TABLE_ID/` |
+| Update table meta-data | `PATCH /table/TABLE_ID` |
+| Add column to table | `POST /tables/TABLE_ID/columns/` |
+| Add row to table | `POST /data/TABLE_ID/rows/` |
+| Get table rows | `GET /data/TABLE_ID/rows` |
+| Get specified row | `GET /data/TABLE_ID/rows/ROW_ID` |
+| Perform genome intersect or subtract | `POST /genemath/` |
+
+
+
 
 ## Tables
 ### Create new table
@@ -53,7 +70,7 @@ python data_set.py
 #### Returns
 Table data as JSON object, includes `id` field with the table's identifier.
 
-### Append column to existing table
+### Add column to existing table
 `POST /tables/TABLE_ID/columns/`
 #### Data format
 ```javascript
@@ -98,10 +115,10 @@ Column data as JSON object, includes `id` field with the column's identifier.
 
 ### Retreive Row Data
 * Rows are keyed by the Quilt Row ID field 'qrid'
-* (temporarily limited to 500 rows)
 
 #### All rows
 `GET /data/TABLE_ID/rows`
+(NOTE: Currently limited to the first 500 rows)
 
 #### Retrieve row by Row ID
 `GET /data/TABLE_ID/rows/ROW_ID`
