@@ -41,8 +41,8 @@ python data_set.py
   'columns': [
     {
       'name': string,
-      'sqlname' : optional string,
-      'description' : optional text,
+      'sqlname': optional string,
+      'description': optional text,
       'type' : one of 'String', 'Number', 'Image', 'Text'
     },
     ...
@@ -60,8 +60,8 @@ Table data as JSON object, includes `id` field with the table's identifier.
 {
    'name': string,
    'sqlname': optional string,
-   'description' : text,
-   'type' : one of 'String', 'Number', 'Image', or 'Text'
+   'description': text,
+   'type': one of 'String', 'Number', 'Image', or 'Text'
 }
 ```
 #### Returns
@@ -78,7 +78,7 @@ Column data as JSON object, includes `id` field with the column's identifier.
 ```javascript
 {
    'name': string,
-   'description' : text
+   'description': text
 }
 ```
 
