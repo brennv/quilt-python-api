@@ -37,8 +37,8 @@ python data_set.py
 |--------|----------|-------------|
 | New table | `POST /tables/` | [See below](#create-table) |
 | Delete table | `DELETE /tables/TABLE_ID/` | [See below](#delete-table) |
-| Update table meta-data | `PATCH /table/TABLE_ID` | [See below](#update-table-meta) |
-| Add column to table | `POST /tables/TABLE_ID/columns/` | [See below](#add-column) |
+| Update table meta-data | `PATCH /table/TABLE_ID` | [See below](#update-table-meta-data) |
+| Add column to table | `POST /tables/TABLE_ID/columns/` | [See below](#add-column-to-table) |
 | Add row to table | `POST /data/TABLE_ID/rows/` | [See below](#append-row) |
 | Get rows | `GET /data/TABLE_ID/rows` | [See below](#get-rows) |
 | Get row | `GET /data/TABLE_ID/rows/ROW_ID` | [See below](#get-row) |
@@ -88,7 +88,7 @@ Column data as JSON object, includes `id` field with the column's identifier.
 ### Delete table
 `DELETE /table/TABLE_ID`
 
-### Update table meta
+### Update table meta-data
 `PATCH /table/TABLE_ID`
 
 #### Data format
