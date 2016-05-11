@@ -27,11 +27,6 @@ python data_set.py
 
 
 # REST API
-* For all REST calls, the content-type is `application/JSON`.
-* Description fields automatically linkify URLs and support `<a>, <i>, <em>, <strong>, <b>` tags
-
-*Summary*
-
 
 | Action | Endpoint | Details |
 |--------|----------|-------------|
@@ -44,7 +39,9 @@ python data_set.py
 | Get table row | `GET /data/TABLE_ID/rows/ROW_ID` | [See below](#get-row) |
 | Genome intersect or subtract | `POST /genemath/` | [See below](#intersect-or-subtract) |
 
-
+Notes
+* For all REST calls, the content-type is `application/JSON`.
+* Description fields automatically linkify URLs and support `<a>, <i>, <em>, <strong>, <b>` tags
 
 
 ## Tables
