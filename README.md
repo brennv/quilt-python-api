@@ -32,7 +32,7 @@ python data_set.py
 |--------|----------|-------------|
 | New table | `POST /tables/` | [See below](#create-table) |
 | Delete table | `DELETE /tables/TABLE_ID/` | [See below](#delete-table) |
-| Update table meta-data | `PATCH /table/TABLE_ID` | [See below](#update-table-meta-data) |
+| Update table meta-data | `PATCH /tables/TABLE_ID` | [See below](#update-table-meta-data) |
 | Add column to table | `POST /tables/TABLE_ID/columns/` | [See below](#add-column-to-table) |
 | Append row to table | `POST /data/TABLE_ID/rows/` | [See below](#append-row) |
 | Get table rows | `GET /data/TABLE_ID/rows` | [See below](#get-rows) |
@@ -83,10 +83,10 @@ Column data as JSON object, includes `id` field with the column's identifier.
 
 
 ### Delete table
-`DELETE /table/TABLE_ID`
+`DELETE /tables/TABLE_ID`
 
 ### Update table meta-data
-`PATCH /table/TABLE_ID`
+`PATCH /tables/TABLE_ID`
 
 #### Data format
 ```javascript
@@ -123,6 +123,28 @@ Row data as JSON object, keyed by column.sqlname.
 
 #### Returns
 Row data as JSON object, keyed by column.sqlname.
+
+## Quilt one table to another
+
+### Create Quilt
+`POST /quilts/`
+#### Data format
+```javascript
+{
+  'left_table_id': int,
+  'right_table_id': int,
+  'left_column_id': int,
+  'right_column_id': int,
+  'jointype': one of 'inner', 'leftOuter', 'firstMatch'
+}
+```
+
+#### Returns
+Quilt info as JSON object, includes `sqlname` field with the quilt's identifier.
+
+### Delete quilt
+`DELETE /quilts/QUILT_SQLNAME`
+
 
 ## Genome Math
 * Performs a gene math operation on two tables
