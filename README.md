@@ -124,9 +124,9 @@ Row data as JSON object, keyed by column.sqlname.
 #### Returns
 Row data as JSON object, keyed by column.sqlname.
 
-## Quilt one table to another
+## Quilt tables
 
-### Create Quilt
+### Join
 `POST /quilts/`
 #### Data format
 ```javascript
@@ -142,7 +142,7 @@ Row data as JSON object, keyed by column.sqlname.
 #### Returns
 Quilt info as JSON object, includes `sqlname` field with the quilt's identifier.
 
-### Delete quilt
+### Undo join
 `DELETE /quilts/QUILT_SQLNAME`
 
 
