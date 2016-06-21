@@ -51,6 +51,12 @@ class Table(object):
                                 auth=self.connection.auth)
         return response.json()
 
+    def __delitem__(self, qrid):
+        response = requests.delete("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
+                                   headers=HEADERS,
+                                   auth=self.connection.auth)
+        return response.status_code
+
     def __iter__(self):
         self._buffer = []
         self._generator = rowgen(self._buffer)
