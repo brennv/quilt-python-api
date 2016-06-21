@@ -1,3 +1,4 @@
+import json
 import getpass
 import requests
 
@@ -80,11 +81,20 @@ class Table(object):
                 self._generator = rowgen(self._buffer)
                 return self._generator.next()
             else:
-                raise StopIteration()        
+                raise StopIteration()
 
+    def create(self, data):
+        response = requests.post("%s/data/%s/rows/" % (self.connection.url, self.id),
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
 
-# Filter this by user
-# Use getpass to enter 
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return response.text
+        
+
 class Connection(object):
     
     def __init__(self, username, url=QUILT_URL):
@@ -93,6 +103,7 @@ class Connection(object):
         self.password = getpass.getpass()
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
 
+        # Filter this by user
         #response = requests.get("%s/users/%s/" % (self.url, username),
         #                       headers=HEADERS,
         #                       auth=requests.auth.HTTPBasicAuth(self.username, self.password))        
@@ -108,6 +119,15 @@ class Connection(object):
         print response.status_code
         return Table(self, response.json())
 
-        
+    def create_table(self, data):
+        response = requests.post("%s/tables/" % self.url,
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.auth)
+
+        if response.status_code == 200:
+            return Table(self, response.json())
+        else:
+            return response.text
         
     
