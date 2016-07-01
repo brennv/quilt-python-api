@@ -1,13 +1,29 @@
 import json
 import getpass
 import requests
+from multiprocessing import Pool
 
 HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
 QUILT_URL = 'https://quiltdata.com'
 
+def make_post_request(url, data, auth):
+    response = None
+    try:
+        response = requests.post(url,
+                                 data=data,
+                                 headers=HEADERS,
+                                 auth=auth,
+                                 timeout=30)
+    except Exception as error:
+        print error
+        traceback.print_exc(file=sys.stdout)
+    finally:
+        return response
+
 def rowgen(buffer):
     for row in buffer:
         yield row
+
 
 class Table(object):
     _schema = {}
@@ -33,7 +49,7 @@ class Table(object):
         self.is_public = data.get('is_public')
 
         if data.has_key('columns'):
-            self._schema = data.get('columns')
+            self._schema = data.get('columns')    
 
     @property
     def columns(self):
@@ -76,6 +92,7 @@ class Table(object):
                 data = response.json()
                 self.nextlink = data['next']
                 print self.nextlink
+                self._buffer = []
                 for row in data['results']:
                     self._buffer.append(row)
                 self._generator = rowgen(self._buffer)
@@ -89,10 +106,21 @@ class Table(object):
                                  headers=HEADERS,
                                  auth=self.connection.auth)
 
-        if response.status_code == 200:
-            return response.json()
-        else:
-            return response.text
+        #if response.status_code == 200:
+        #    return response.json()
+        #else:
+        #    return response.text
+        return response
+
+    def create_async(self, data, callback=None):
+        """
+        Use an asynchronous POST request with the process pool.
+        """
+        url = "%s/data/%s/rows/" % (self.connection.url, self.id)
+        res = self.connection.pool.apply_async(make_post_request,
+                                               args=(url, json.dumps(data), self.connection.auth),
+                                               callback=callback)
+        return res
         
 
 class Connection(object):
@@ -103,6 +131,8 @@ class Connection(object):
         self.password = getpass.getpass()
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
 
+        self.pool = Pool(processes=8)
+        
         # Filter this by user
         #response = requests.get("%s/users/%s/" % (self.url, username),
         #                       headers=HEADERS,
@@ -110,6 +140,10 @@ class Connection(object):
         
         #print response.status_code
         #print response.json()        
+
+    def __del__(self):
+        self.pool.close()
+        self.pool.join()
 
     def get_table(self, table_id):
         response = requests.get("%s/tables/%s/" % (self.url, table_id),
@@ -128,6 +162,7 @@ class Connection(object):
         if response.status_code == 200:
             return Table(self, response.json())
         else:
+            print response.text
             return response.text
         
     
