@@ -131,15 +131,13 @@ class Connection(object):
         self.password = getpass.getpass()
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
 
+        response = requests.get("%s/users/%s/" % (self.url, username),
+                                headers=HEADERS,
+                                auth=requests.auth.HTTPBasicAuth(self.username, self.password))        
+        userdata = response.json()
+        self.tables = [Table(self, d) for d in userdata['tables']]                
+
         self.pool = Pool(processes=8)
-        
-        # Filter this by user
-        #response = requests.get("%s/users/%s/" % (self.url, username),
-        #                       headers=HEADERS,
-        #                       auth=requests.auth.HTTPBasicAuth(self.username, self.password))        
-        
-        #print response.status_code
-        #print response.json()        
 
     def __del__(self):
         self.pool.close()
