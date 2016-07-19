@@ -103,13 +103,12 @@ class Connection(object):
         self.password = getpass.getpass()
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
 
-        # Filter this by user
-        #response = requests.get("%s/users/%s/" % (self.url, username),
-        #                       headers=HEADERS,
-        #                       auth=requests.auth.HTTPBasicAuth(self.username, self.password))        
-        
-        #print response.status_code
-        #print response.json()        
+        response = requests.get("%s/users/%s/" % (self.url, username),
+                                headers=HEADERS,
+                                auth=requests.auth.HTTPBasicAuth(self.username, self.password))        
+        userdata = response.json()
+        print userdata
+        self.tables = [Table(self, d) for d in userdata['tables']]                
 
     def get_table(self, table_id):
         response = requests.get("%s/tables/%s/" % (self.url, table_id),
