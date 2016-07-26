@@ -28,6 +28,8 @@ def rowgen(buffer):
 class Table(object):
     _schema = {}
     _buffer = []
+    _search = None
+    _ordering_fields = []
     
     def __init__(self, con, id, name, sqlname, description, owner, is_public):
         self.nextlink = None
@@ -80,14 +82,33 @@ class Table(object):
         self.nextlink = "%s/data/%s/rows/" % (self.connection.url, self.id)
         return self
 
+    def order_by(self, fields):
+        if not fields:
+            self._ordering_fields = []
+        elif isinstance(fields, list):
+            self._ordering_fields = fields
+        else:
+            self._ordering_fields = [fields]
+
+    def search(self, term):
+        self._search = term
+
     def next(self):        
         
         try:
             return self._generator.next()
         except StopIteration:
             if self.nextlink:
+                params = {}
+                if self._ordering_fields:
+                    params['ordering'] = [f for f in self._ordering_fields]
+
+                if self._search:
+                    params['search'] = self._search
+                    
                 response = requests.get(self.nextlink,
                                         headers=HEADERS,
+                                        params=params,
                                         auth=self.connection.auth)
                 data = response.json()
                 self.nextlink = data['next']
