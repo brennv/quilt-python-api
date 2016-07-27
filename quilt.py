@@ -196,7 +196,7 @@ class Table(object):
                                  data = json.dumps(data),
                                  headers=HEADERS,
                                  auth=self.connection.auth)
-        if response.status_code == requests.codes('ok'):
+        if response.status_code == requests.codes.ok:
             i = self.__iter__() # reset iterator
             data=response.json()
             q = Quilt(self, data)
