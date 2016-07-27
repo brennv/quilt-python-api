@@ -25,8 +25,32 @@ def rowgen(buffer):
         yield row
 
 
+class Quilt(object):
+    def __init__(self, table, data):
+        self.table = table
+        self.id = data['sqlname']
+        self.left_column = data['left_column']
+        self.right_column = data['right_column']
+        self.jointype = data['jointype']
+        self.right_table = data['right_table_name']
+
+    def delete(self):
+        if not self.id:
+            return requests.codes.not_found
+        
+        connection = self.table.connection
+        response = requests.delete("%s/quilts/%s/" % (connection.url, self.id),
+                                   headers=HEADERS,
+                                   auth=connection.auth)
+        if response.status_code == requests.codes.no_content:
+            self.table._quilts = None
+            self.id = None
+        return response.status_code
+        
+
 class Table(object):
-    _schema = {}
+    _schema = None
+    _quilts = None
     _buffer = []
     _search = None
     _ordering_fields = []
@@ -51,10 +75,16 @@ class Table(object):
         self.is_public = data.get('is_public')
 
         if data.has_key('columns'):
-            self._schema = data.get('columns')    
+            self._schema = data.get('columns')
+
+        if data.has_key('quilts'):
+            self._quilts = data.get('quilts')            
 
     def __str__(self):
         return "[%04d] %s" % (self.id, self.name)
+
+    def __eq__(self, table):
+        return self.id == table.id
 
     @property
     def columns(self):
@@ -66,6 +96,20 @@ class Table(object):
             if data.has_key('columns'):
                 self._schema = data.get('columns')
         return self._schema
+
+    @property
+    def quilts(self):
+        if not self._quilts is None:
+            response = requests.get("%s/tables/%s/" % (self.connection.url, self.id),
+                                    headers=HEADERS,
+                                    auth=self.connection.auth)
+            data = response.json()
+            if data.has_key('columns'):
+                self._schema = data.get('columns')
+                
+            if data.has_key('quilts'):
+                self._quilts = [Quilt(self, d) for d in data.get('quilts')]
+        return self._quilts
 
     def __getitem__(self, qrid):
         response = requests.get("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
@@ -130,10 +174,6 @@ class Table(object):
                                  headers=HEADERS,
                                  auth=self.connection.auth)
 
-        #if response.status_code == 200:
-        #    return response.json()
-        #else:
-        #    return response.text
         return response
 
     def create_async(self, data, callback=None):
@@ -145,6 +185,28 @@ class Table(object):
                                                args=(url, json.dumps(data), self.connection.auth),
                                                callback=callback)
         return res
+
+    def quilt(self, left_column, right_column):
+        data = {}
+        data['left_table'] = self.id
+        data['left_column'] = left_column
+        data['right_column'] = right_column
+
+        response = requests.post("%s/quilts/" % self.connection.url,
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+        if response.status_code == requests.codes('ok'):
+            i = self.__iter__() # reset iterator
+            data=response.json()
+            q = Quilt(self, data)
+            if self.quilts is not None:
+                self.quilts.append(q)
+            return q
+        else:
+            print "Oops, something went wrong."
+            print "response=%s" % response.status_code
+            return None
         
 
 class Connection(object):
@@ -160,7 +222,7 @@ class Connection(object):
                                 headers=HEADERS,
                                 auth=requests.auth.HTTPBasicAuth(self.username, self.password))
         self.status_code = response.status_code
-        if response.status_code == 200:
+        if response.status_code == requests.codes.ok:
             userdata = response.json()
             self.tables = [Table(self, d) for d in userdata['tables']]                
 
@@ -186,7 +248,7 @@ class Connection(object):
                                  headers=HEADERS,
                                  auth=self.auth)
 
-        if response.status_code == 200:
+        if response.status_code == requests.codes.ok:
             return Table(self, response.json())
         else:
             print response.text
