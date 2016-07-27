@@ -172,6 +172,27 @@ class Connection(object):
         self.pool.close()
         self.pool.join()
 
+    def search(self, search):
+        matches = []
+        if isinstance(search, list):
+            terms = search
+        else:
+            terms = [search]
+
+        params = {'search' : terms}
+        response = requests.get("%s/tables/" % (self.url),
+                                headers=HEADERS,
+                                params=params,
+                                auth=self.auth)
+        if response.status_code == 200:
+            data = response.json()
+            matches = [Table(self, d) for d in data]
+        else:
+            print "Oops, something went wrong."
+            print "response=%s" % response.status_code
+
+        return matches        
+
     def get_table(self, table_id):
         response = requests.get("%s/tables/%s/" % (self.url, table_id),
                                 headers=HEADERS,
