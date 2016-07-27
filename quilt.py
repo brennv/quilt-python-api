@@ -53,6 +53,9 @@ class Table(object):
         if data.has_key('columns'):
             self._schema = data.get('columns')    
 
+    def __str__(self):
+        return "[%04d] %s" % (self.id, self.name)
+
     @property
     def columns(self):
         if not self._schema:
@@ -151,14 +154,19 @@ class Connection(object):
         self.username = username
         self.password = getpass.getpass()
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
+        self.status_code = None
 
         response = requests.get("%s/users/%s/" % (self.url, username),
                                 headers=HEADERS,
-                                auth=requests.auth.HTTPBasicAuth(self.username, self.password))        
-        userdata = response.json()
-        self.tables = [Table(self, d) for d in userdata['tables']]                
+                                auth=requests.auth.HTTPBasicAuth(self.username, self.password))
+        self.status_code = response.status_code
+        if response.status_code == 200:
+            userdata = response.json()
+            self.tables = [Table(self, d) for d in userdata['tables']]                
 
-        self.pool = Pool(processes=8)
+            self.pool = Pool(processes=8)
+        else:
+            print "Login Failed. Please check your credentials and try again."
 
     def __del__(self):
         self.pool.close()
