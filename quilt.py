@@ -109,6 +109,8 @@ class Table(object):
                 
             if data.has_key('quilts'):
                 self._quilts = [Quilt(self, d) for d in data.get('quilts')]
+            else:
+                self._quilts = []
         return self._quilts
 
     def __getitem__(self, qrid):
