@@ -142,6 +142,13 @@ class Table(object):
     def search(self, term):
         self._search = term
 
+    def commit(self, message):
+        data = {
+        response = requests.post("%s/tables/%s/commit/" % (self.connection.url, self.id),
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+
     def next(self):        
         
         try:
