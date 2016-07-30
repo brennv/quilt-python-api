@@ -54,6 +54,9 @@ class Table(object):
     _buffer = []
     _search = None
     _ordering_fields = []
+    _chr = None
+    _start = None
+    _end = None
     
     def __init__(self, con, id, name, sqlname, description, owner, is_public):
         self.nextlink = None
@@ -85,6 +88,21 @@ class Table(object):
 
     def __eq__(self, table):
         return self.id == table.id
+
+    def _guess_bed_columns(self):
+        for c in self.columns:
+            name = c['name'].lower()
+            if 'chromosome' in name:
+                self._chr = c['id']
+            elif not self._chr and 'chr' in name:
+                self._chr = c['id']
+
+            if 'start' in name:
+                self._start = c['id']
+            elif 'end' in name:
+                self._end = c['id']
+            elif not self._end and 'stop' in name:
+                self._end = c['id']                
 
     @property
     def columns(self):
@@ -130,6 +148,31 @@ class Table(object):
         self._generator = rowgen(self._buffer)
         self.nextlink = "%s/data/%s/rows/" % (self.connection.url, self.id)
         return self
+
+    def _genemath(self, b, operator):
+        a_chr, a_start, a_end = self.get_bed_cols()
+        if not (a_chr and a_start and a_end):
+            print "Chromosome, start, stop columns not found."
+            return
+    
+        b_chr, b_start, b_end = b.get_bed_cols()
+        if not (b_chr and b_start and b_end):
+            print "Chromosome, start, stop columns not found in table %s." % b.name
+            return
+
+        data = { 'left_chr' : a_chr,
+                 'left_start' : a_start,
+                 'left_end' : a_end,
+                 'right_chr' : b_chr,
+                 'right_start' : b_start,
+                 'right_end' : b_end,
+                 'operator' : operator }
+        response = requests.post("%s/genemath/" % self.connection.url,
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+        return response
+
 
     def order_by(self, fields):
         if not fields:
@@ -209,7 +252,50 @@ class Table(object):
             print "Oops, something went wrong."
             print "response=%s" % response.status_code
             return None
-        
+
+    def set_bed_cols(self, chr, start, end):
+        self._chr = chr
+        self._start = start
+        self._end = end
+
+    def get_bed_cols(self):
+        if not (self._chr and self._start and self._end):
+            self._guess_bed_columns()
+        return self._chr, self._start, self._end
+
+    def intersect(self, b):
+        return self._genemath(b, 'Intersect')
+
+    def subtract(self, b):
+        return self._genemath(b, 'Subtract')
+
+    def intersect_wao(self, b):
+        return self._genemath(b, 'Intersect_WAO')
+
+    def intersect(self, b):
+        a_chr, a_start, a_end = self.get_bed_cols()
+        if not (a_chr and a_start and a_end):
+            print "Chromosome, start, stop columns not found."
+            return
+    
+        b_chr, b_start, b_end = b.get_bed_cols()
+        if not (b_chr and b_start and b_end):
+            print "Chromosome, start, stop columns not found in table %s." % b.name
+            return
+
+        data = { 'left_chr' : a_chr,
+                 'left_start' : a_start,
+                 'left_end' : a_end,
+                 'right_chr' : b_chr,
+                 'right_start' : b_start,
+                 'right_end' : b_end,
+                 'operator' : 'Intersect' }
+        response = requests.post("%s/genemath/" % self.connection.url,
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+        return response
+
 
 class Connection(object):
     
@@ -219,6 +305,7 @@ class Connection(object):
         self.password = getpass.getpass()
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
         self.status_code = None
+        self.userid = None
 
         response = requests.get("%s/users/%s/" % (self.url, username),
                                 headers=HEADERS,
@@ -226,7 +313,8 @@ class Connection(object):
         self.status_code = response.status_code
         if response.status_code == requests.codes.ok:
             userdata = response.json()
-            self.tables = [Table(self, d) for d in userdata['tables']]                
+            self.tables = [Table(self, d) for d in userdata['tables']]
+            self.userid = userdata['id']
 
             self.pool = Pool(processes=8)
         else:
