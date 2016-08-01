@@ -185,12 +185,34 @@ class Table(object):
     def search(self, term):
         self._search = term
 
+    @property
+    def commits(self):
+        response = requests.get("%s/data/%s/commits/" % (self.connection.url, self.id),
+                                headers=HEADERS,
+                                auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            return response.json()
+        else:
+            print "Oops, something went wrong."
+            return response
+
     def commit(self, message):
-        data = {
-        response = requests.post("%s/tables/%s/commit/" % (self.connection.url, self.id),
+        data = {'message' : message}
+        response = requests.post("%s/data/%s/commits/" % (self.connection.url, self.id),
                                  data = json.dumps(data),
                                  headers=HEADERS,
                                  auth=self.connection.auth)
+
+    def checkout(self, commit):
+        data = {}
+        response = requests.post("%s/data/%s/commits/%s/checkout/" % (self.connection.url, self.id, commit),
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            self.__iter__()
+        else:
+            print response.text
 
     def next(self):        
         
