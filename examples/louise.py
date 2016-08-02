@@ -21,10 +21,10 @@ schema = {
 
 t = con.create_table(schema)
 
-def insert(t, buffer):
+def insert(t, i, buffer):
     response = t.create(buffer)
     if response.status_code == 200:
-        print "Processed %d rows, inserting %d" % (i, len(buffer))
+        print "Processed %d rows, inserting %d" % (i+1, len(buffer))
     else:
         print "Warning: Insert failed!"
         print response.text
@@ -43,8 +43,8 @@ for i, row in enumerate(src):
         buffer.append(tuple)
 
     if len(buffer) >= batch:
-        insert(t, buffer)
+        insert(t, i, buffer)
         buffer = []
 
-insert(t, buffer)
+insert(t, i, buffer)
 
