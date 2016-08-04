@@ -104,6 +104,22 @@ class Table(object):
             elif not self._end and 'stop' in name:
                 self._end = c['id']                
 
+    def delete(self):
+        response = requests.delete("%s/tables/%s/" % (self.connection.url, self.id),
+                                   headers=HEADERS,
+                                   auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            self.id = None
+            self.name = None
+            self.description = None
+            self.owner = None
+            self.sqlname = None
+            self._schema = None
+            self._quilts = None
+        else:
+            print "Oops, something went wrong."
+            print response.text
+
     @property
     def columns(self):
         if not self._schema:
@@ -113,8 +129,42 @@ class Table(object):
             data = response.json()
             if data.has_key('columns'):
                 self._schema = data.get('columns')
-        return self._schema
+        return self._schema    
 
+    def add_column(self, name, type, sqlname=None, description=None):
+        data = { 'name' : name,
+                 'type' : type}
+        if sqlname:
+            data['sqlname'] = sqlname
+
+        if description:
+            data['description'] = description
+                 
+        response = requests.post("%s/tables/%s/columns/" % (self.connection.url, self.id),
+                                 headers=HEADERS,
+                                 data=json.dumps(data),
+                                 auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            newcol = response.json()
+            self._schema = None
+            return newcol
+        else:
+            print "Oops, something went wrong"
+            print response.text
+            return None
+
+    def delete_column(self, column_id):
+        response = requests.delete("%s/tables/%s/columns/%s/" % (self.connection.url, self.id, column_id),
+                                   headers=HEADERS,
+                                   auth=self.connection.auth)
+        if response.status_code == requests.codes.no_content:            
+            self._schema = None
+            return None
+        else:
+            print "Oops, something went wrong"
+            print response.text
+            return None
+        
     @property
     def quilts(self):
         if not self._quilts is None:
