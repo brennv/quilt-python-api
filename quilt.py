@@ -108,7 +108,7 @@ class Table(object):
         response = requests.delete("%s/tables/%s/" % (self.connection.url, self.id),
                                    headers=HEADERS,
                                    auth=self.connection.auth)
-        if response.status_code == requests.codes.ok:
+        if response.status_code == requests.codes.no_content:
             self.id = None
             self.name = None
             self.description = None
