@@ -24,6 +24,12 @@ def rowgen(buffer):
     for row in buffer:
         yield row
 
+class File(object):
+    def __init__(self, connection, data):
+        self.owner = data['owner']
+        self.filename = data['filename']
+        self.creds = data['s3creds']
+
 
 class Quilt(object):
     def __init__(self, table, data):
@@ -104,6 +110,22 @@ class Table(object):
             elif not self._end and 'stop' in name:
                 self._end = c['id']                
 
+    def delete(self):
+        response = requests.delete("%s/tables/%s/" % (self.connection.url, self.id),
+                                   headers=HEADERS,
+                                   auth=self.connection.auth)
+        if response.status_code == requests.codes.no_content:
+            self.id = None
+            self.name = None
+            self.description = None
+            self.owner = None
+            self.sqlname = None
+            self._schema = None
+            self._quilts = None
+        else:
+            print "Oops, something went wrong."
+            print response.text
+
     @property
     def columns(self):
         if not self._schema:
@@ -113,8 +135,42 @@ class Table(object):
             data = response.json()
             if data.has_key('columns'):
                 self._schema = data.get('columns')
-        return self._schema
+        return self._schema    
 
+    def add_column(self, name, type, sqlname=None, description=None):
+        data = { 'name' : name,
+                 'type' : type}
+        if sqlname:
+            data['sqlname'] = sqlname
+
+        if description:
+            data['description'] = description
+                 
+        response = requests.post("%s/tables/%s/columns/" % (self.connection.url, self.id),
+                                 headers=HEADERS,
+                                 data=json.dumps(data),
+                                 auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            newcol = response.json()
+            self._schema = None
+            return newcol
+        else:
+            print "Oops, something went wrong"
+            print response.text
+            return None
+
+    def delete_column(self, column_id):
+        response = requests.delete("%s/tables/%s/columns/%s/" % (self.connection.url, self.id, column_id),
+                                   headers=HEADERS,
+                                   auth=self.connection.auth)
+        if response.status_code == requests.codes.no_content:            
+            self._schema = None
+            return None
+        else:
+            print "Oops, something went wrong"
+            print response.text
+            return None
+        
     @property
     def quilts(self):
         if not self._quilts is None:
@@ -335,6 +391,8 @@ class Connection(object):
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
         self.status_code = None
         self.userid = None
+        self._tables = None
+        self._files = None
 
         response = requests.get("%s/users/%s/" % (self.url, username),
                                 headers=HEADERS,
@@ -342,7 +400,7 @@ class Connection(object):
         self.status_code = response.status_code
         if response.status_code == requests.codes.ok:
             userdata = response.json()
-            self.tables = [Table(self, d) for d in userdata['tables']]
+            self._tables = [Table(self, d) for d in userdata['tables']]
             self.userid = userdata['id']
 
             self.pool = Pool(processes=8)
@@ -374,6 +432,40 @@ class Connection(object):
 
         return matches        
 
+    @property
+    def tables(self):
+        if not self._tables:
+            response = requests.get("%s/users/%s/" % (self.url, username),
+                                    headers=HEADERS,
+                                    auth=requests.auth.HTTPBasicAuth(self.username, self.password))
+            self.status_code = response.status_code
+            if response.status_code == requests.codes.ok:
+                userdata = response.json()
+                self._tables = [Table(self, d) for d in userdata['tables']]
+            else:
+                print "Oops, something went wrong."
+                print "response=%s" % response.status_code
+                self._tables = []
+        return self._tables
+
+    @property
+    def files(self):
+        if not self._files:
+            response = requests.get("%s/files/" % (self.url),
+                                    headers=HEADERS,
+                                    auth=requests.auth.HTTPBasicAuth(self.username, self.password))
+            self.status_code = response.status_code
+            if response.status_code == requests.codes.ok:
+                filedata = response.json()
+                print filedata
+                self._filedata = filedata
+                self._files = [File(self, d) for d in filedata['results']]
+            else:
+                print "Oops, something went wrong."
+                print "response=%s" % response.status_code
+                self._files = []
+        return self._files
+
     def get_table(self, table_id):
         response = requests.get("%s/tables/%s/" % (self.url, table_id),
                                 headers=HEADERS,
@@ -393,5 +485,6 @@ class Connection(object):
         else:
             print response.text
             return response.text
-        
+
+
     
