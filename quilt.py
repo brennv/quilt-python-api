@@ -24,6 +24,12 @@ def rowgen(buffer):
     for row in buffer:
         yield row
 
+class File(object):
+    def __init__(self, connection, data):
+        self.owner = data['owner']
+        self.filename = data['filename']
+        self.creds = data['s3creds']
+
 
 class Quilt(object):
     def __init__(self, table, data):
@@ -356,6 +362,8 @@ class Connection(object):
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
         self.status_code = None
         self.userid = None
+        self._tables = None
+        self._files = None
 
         response = requests.get("%s/users/%s/" % (self.url, username),
                                 headers=HEADERS,
@@ -363,7 +371,7 @@ class Connection(object):
         self.status_code = response.status_code
         if response.status_code == requests.codes.ok:
             userdata = response.json()
-            self.tables = [Table(self, d) for d in userdata['tables']]
+            self._tables = [Table(self, d) for d in userdata['tables']]
             self.userid = userdata['id']
 
             self.pool = Pool(processes=8)
@@ -395,6 +403,40 @@ class Connection(object):
 
         return matches        
 
+    @property
+    def tables(self):
+        if not self._tables:
+            response = requests.get("%s/users/%s/" % (self.url, username),
+                                    headers=HEADERS,
+                                    auth=requests.auth.HTTPBasicAuth(self.username, self.password))
+            self.status_code = response.status_code
+            if response.status_code == requests.codes.ok:
+                userdata = response.json()
+                self._tables = [Table(self, d) for d in userdata['tables']]
+            else:
+                print "Oops, something went wrong."
+                print "response=%s" % response.status_code
+                self._tables = []
+        return self._tables
+
+    @property
+    def files(self):
+        if not self._files:
+            response = requests.get("%s/files/" % (self.url),
+                                    headers=HEADERS,
+                                    auth=requests.auth.HTTPBasicAuth(self.username, self.password))
+            self.status_code = response.status_code
+            if response.status_code == requests.codes.ok:
+                filedata = response.json()
+                print filedata
+                self._filedata = filedata
+                self._files = [File(self, d) for d in filedata['results']]
+            else:
+                print "Oops, something went wrong."
+                print "response=%s" % response.status_code
+                self._files = []
+        return self._files
+
     def get_table(self, table_id):
         response = requests.get("%s/tables/%s/" % (self.url, table_id),
                                 headers=HEADERS,
@@ -414,5 +456,6 @@ class Connection(object):
         else:
             print response.text
             return response.text
-        
+
+
     
