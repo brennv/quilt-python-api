@@ -1,6 +1,7 @@
 import json
 import getpass
 import requests
+from mimetypes import MimeTypes
 from multiprocessing import Pool
 
 HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
@@ -30,6 +31,7 @@ class File(object):
         self.filename = data['filename']
         self.url = data['url']
         self.creds = data['s3creds']
+        self.upload_url = data['upload_url']
 
     def download(self):
         url = self.url
@@ -41,7 +43,7 @@ class File(object):
                 if chunk: # filter out keep-alive new chunks
                     f.write(chunk)
         return outfile
-
+        
 
 class Quilt(object):
     def __init__(self, table, data):
@@ -468,6 +470,31 @@ class Connection(object):
         else:
             print response.text
             return response.text
+
+    def upload(self, filepath):
+        filename = filepath.split('/')[-1]
+        mime = MimeTypes()
+        mime_type = mime.guess_type(filename)
+        data = { 'filename' : filename, 'mime_type' : mime_type }
+        response = requests.post("%s/files/" % self.url,
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.auth)
+        print response.text
+        if response.status_code == requests.codes.created:
+            f = File(self, response.json())
+            acl = f.creds['x-amz-acl']
+            url = f.creds['signed_request']
+            with open(filepath, 'rb') as localfile:
+                print "URL"
+                print url
+                response = requests.put(f.upload_url,
+                                        data=localfile)
+
+                print response.text
+                return f
+        else:
+            print response.text
 
 
     
