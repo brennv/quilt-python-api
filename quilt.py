@@ -28,7 +28,19 @@ class File(object):
     def __init__(self, connection, data):
         self.owner = data['owner']
         self.filename = data['filename']
+        self.url = data['url']
         self.creds = data['s3creds']
+
+    def download(self):
+        url = self.url
+        outfile = self.filename
+
+        r = requests.get(url, stream=True)
+        with open(outfile, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024): 
+                if chunk: # filter out keep-alive new chunks
+                    f.write(chunk)
+        return outfile
 
 
 class Quilt(object):
