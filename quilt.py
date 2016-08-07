@@ -486,12 +486,8 @@ class Connection(object):
             acl = f.creds['x-amz-acl']
             url = f.creds['signed_request']
             with open(filepath, 'rb') as localfile:
-                print "URL"
-                print url
                 response = requests.put(f.upload_url,
                                         data=localfile)
-
-                print response.text
                 return f
         else:
             print response.text
