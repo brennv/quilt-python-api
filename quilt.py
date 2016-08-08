@@ -1,6 +1,7 @@
 import json
 import getpass
 import requests
+from mimetypes import MimeTypes
 from multiprocessing import Pool
 
 HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
@@ -28,8 +29,22 @@ class File(object):
     def __init__(self, connection, data):
         self.owner = data['owner']
         self.filename = data['filename']
+        self.fullpath = data['fullpath']
+        self.url = data['url']
         self.creds = data['s3creds']
+        self.upload_url = data['upload_url']
 
+    def download(self):
+        url = self.url
+        outfile = self.filename
+
+        r = requests.get(url, stream=True)
+        with open(outfile, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024): 
+                if chunk: # filter out keep-alive new chunks
+                    f.write(chunk)
+        return outfile
+        
 
 class Quilt(object):
     def __init__(self, table, data):
@@ -445,7 +460,17 @@ class Connection(object):
         print response.status_code
         return Table(self, response.json())
 
-    def create_table(self, data):
+    def create_table(self, name, description=None, inputfile=None):
+        data = { 'name' : name }
+        if description:
+            data['description'] = description
+        if inputfile:
+            if isinstance(inputfile, File):
+                data['csvfile'] = inputfile.fullpath
+            else:
+                f = self.upload(inputfile)
+                data['csvfile'] = f.fullpath
+            
         response = requests.post("%s/tables/" % self.url,
                                  data = json.dumps(data),
                                  headers=HEADERS,
@@ -456,6 +481,25 @@ class Connection(object):
         else:
             print response.text
             return response.text
+
+    def upload(self, filepath):
+        filename = filepath.split('/')[-1]
+        mime = MimeTypes()
+        mime_type = mime.guess_type(filename)
+        data = { 'filename' : filename, 'mime_type' : mime_type }
+        response = requests.post("%s/files/" % self.url,
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.auth)
+
+        if response.status_code == requests.codes.created:
+            f = File(self, response.json())
+            with open(filepath, 'rb') as localfile:
+                response = requests.put(f.upload_url,
+                                        data=localfile)
+                return f
+        else:
+            print response.text
 
 
     
