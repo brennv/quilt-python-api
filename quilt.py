@@ -29,6 +29,7 @@ class File(object):
     def __init__(self, connection, data):
         self.owner = data['owner']
         self.filename = data['filename']
+        self.fullpath = data['fullpath']
         self.url = data['url']
         self.creds = data['s3creds']
         self.upload_url = data['upload_url']
@@ -459,7 +460,17 @@ class Connection(object):
         print response.status_code
         return Table(self, response.json())
 
-    def create_table(self, data):
+    def create_table(self, name, description=None, inputfile=None):
+        data = { 'name' : name }
+        if description:
+            data['description'] = description
+        if inputfile:
+            if isinstance(inputfile, File):
+                data['csvfile'] = inputfile.fullpath
+            else:
+                f = self.upload(inputfile)
+                data['csvfile'] = f.fullpath
+            
         response = requests.post("%s/tables/" % self.url,
                                  data = json.dumps(data),
                                  headers=HEADERS,
@@ -480,11 +491,9 @@ class Connection(object):
                                  data = json.dumps(data),
                                  headers=HEADERS,
                                  auth=self.auth)
-        print response.text
+
         if response.status_code == requests.codes.created:
             f = File(self, response.json())
-            acl = f.creds['x-amz-acl']
-            url = f.creds['signed_request']
             with open(filepath, 'rb') as localfile:
                 response = requests.put(f.upload_url,
                                         data=localfile)
