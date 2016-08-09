@@ -252,9 +252,11 @@ class Table(object):
             self._ordering_fields = fields
         else:
             self._ordering_fields = [fields]
+        return self.__iter__()
 
     def search(self, term):
         self._search = term
+        return self.__iter__()
 
     def next(self):        
         
@@ -275,7 +277,6 @@ class Table(object):
                                         auth=self.connection.auth)
                 data = response.json()
                 self.nextlink = data['next']
-                print self.nextlink
                 self._buffer = []
                 for row in data['results']:
                     self._buffer.append(row)
@@ -379,6 +380,7 @@ class Connection(object):
         self.userid = None
         self._tables = None
         self._files = None
+        self._pool = None
 
         response = requests.get("%s/users/%s/" % (self.url, username),
                                 headers=HEADERS,
@@ -389,13 +391,14 @@ class Connection(object):
             self._tables = [Table(self, d) for d in userdata['tables']]
             self.userid = userdata['id']
 
-            self.pool = Pool(processes=8)
+            self._pool = Pool(processes=8)
         else:
             print "Login Failed. Please check your credentials and try again."
 
     def __del__(self):
-        self.pool.close()
-        self.pool.join()
+        if self._pool:
+            self._pool.close()
+            self._pool.join()
 
     def search(self, search):
         matches = []
@@ -421,7 +424,7 @@ class Connection(object):
     @property
     def tables(self):
         if not self._tables:
-            response = requests.get("%s/users/%s/" % (self.url, username),
+            response = requests.get("%s/users/%s/" % (self.url, self.username),
                                     headers=HEADERS,
                                     auth=requests.auth.HTTPBasicAuth(self.username, self.password))
             self.status_code = response.status_code
@@ -457,8 +460,12 @@ class Connection(object):
                                 headers=HEADERS,
                                 auth=self.auth)        
         
-        print response.status_code
-        return Table(self, response.json())
+        if response.status_code == requests.codes.ok:
+            return Table(self, response.json())
+        else:
+            print "Oops, something went wrong."
+            print response.text
+            return None
 
     def create_table(self, name, description=None, inputfile=None):
         data = { 'name' : name }
