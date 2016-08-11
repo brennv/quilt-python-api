@@ -27,12 +27,27 @@ def rowgen(buffer):
 
 class File(object):
     def __init__(self, connection, data):
+        self._data = data
+        self.connection = connection
+        self.id = data['id']
         self.owner = data['owner']
         self.filename = data['filename']
         self.fullpath = data['fullpath']
         self.url = data['url']
         self.creds = data['s3creds']
         self.upload_url = data['upload_url']
+        self.status = data['status']
+
+    def refresh(self):
+        response = requests.get("%s/files/%s/" % (self.connection.url, self.id),
+                                headers=HEADERS,
+                                auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            self.__init__(self.connection, response.json())
+        else:
+            print "Oops, something went wrong."
+            print response.status_code
+        return response
 
     def download(self):
         url = self.url
@@ -244,6 +259,11 @@ class Table(object):
                                  auth=self.connection.auth)
         return response
 
+    def export(self):
+        response = requests.get("%s/data/%s/rows/export" % (self.connection.url, self.id),
+                                headers=HEADERS,
+                                auth=self.connection.auth)        
+        return File(self.connection, response.json())
 
     def order_by(self, fields):
         if not fields:
