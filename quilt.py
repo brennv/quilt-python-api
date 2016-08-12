@@ -1,6 +1,14 @@
 import json
 import getpass
 import requests
+import sys
+
+try:
+    import pandas
+    PANDAS = True
+except:
+    PANDAS = False
+
 from mimetypes import MimeTypes
 from multiprocessing import Pool
 
@@ -216,6 +224,18 @@ class Table(object):
             else:
                 self._quilts = []
         return self._quilts
+
+    def df(self, limit=None):
+        if not PANDAS:
+            print "Install pandas to use DataFrames: http://pandas.pydata.org/"
+            return None
+
+        data = []
+        for i, row in enumerate(self):
+            data.append(row)
+            if limit and i>limit:
+                break        
+        return pandas.DataFrame(data)        
 
     def __getitem__(self, qrid):
         response = requests.get("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
