@@ -231,11 +231,12 @@ class Table(object):
             return None
 
         data = []
+        columns = ['qrid'] + [c['sqlname'] for c in self.columns]
         for i, row in enumerate(self):
-            data.append(row)
             if limit and i>limit:
-                break        
-        return pandas.DataFrame(data)        
+                break
+            data.append(row)
+        return pandas.DataFrame(data, columns=columns)
 
     def __getitem__(self, qrid):
         response = requests.get("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
