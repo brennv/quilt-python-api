@@ -231,12 +231,14 @@ class Table(object):
             return None
 
         data = []
-        columns = ['qrid'] + [c['sqlname'] for c in self.columns]
+        index = []
+        columns = [c['sqlname'] for c in self.columns]
         for i, row in enumerate(self):
             if limit and i>limit:
                 break
+            index.append(row['qrid'])
             data.append(row)
-        return pandas.DataFrame(data, columns=columns)
+        return pandas.DataFrame(data, columns=columns, index=index)
 
     def __getitem__(self, qrid):
         response = requests.get("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
@@ -529,6 +531,45 @@ class Connection(object):
         else:
             print response.text
             return response.text
+
+    def save_df(self, df, name, description=None):
+        type_map = { 'object' : 'String',
+                     'float64' : 'Number' }
+        
+        if not PANDAS:
+            print "Install pandas to use DataFrames: http://pandas.pydata.org/"
+            return None
+
+        schema = { 'name' : name, 'columns' : [] }
+        if description:
+            schema['description'] = description
+            
+        for i, col in enumerate(df.columns):
+            dt = df.dtypes[i]
+            ctype = type_map.get(str(dt), None)
+            if not ctype:
+                print "Oops, unrecognized type %s in Data Frame" % dt
+                return None
+            
+            schema['columns'].append({'name' : col, 'type' : ctype }) 
+
+        response = requests.post("%s/tables/" % self.url,
+                                 data = json.dumps(schema),
+                                 headers=HEADERS,
+                                 auth=self.auth)
+
+        if response.status_code == requests.codes.ok:
+            table = Table(self, response.json())
+        else:
+            print response.text
+            return None
+
+        response = table.create(df.T.to_dict().values())
+        if response.status_code != requests.codes.ok:
+            print "Oops, something went wrong."
+            print response.text
+
+        return table
 
     def upload(self, filepath):
         filename = filepath.split('/')[-1]
