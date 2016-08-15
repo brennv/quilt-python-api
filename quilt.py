@@ -534,7 +534,14 @@ class Connection(object):
 
     def save_df(self, df, name, description=None):
         type_map = { 'object' : 'String',
-                     'float64' : 'Number' }
+                     'float16' : 'Number',
+                     'float32' : 'Number',
+                     'float64' : 'Number',
+                     'int8' : 'Number',
+                     'int16' : 'Number',
+                     'int32' : 'Number',
+                     'int64' : 'Number',
+                     'unicode' : 'String' }
         
         if not PANDAS:
             print "Install pandas to use DataFrames: http://pandas.pydata.org/"
