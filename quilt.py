@@ -571,7 +571,7 @@ class Connection(object):
             print response.text
             return None
 
-        response = table.create(df.T.to_dict().values())
+        response = table.create(df.to_dict('records').values())
         if response.status_code != requests.codes.ok:
             print "Oops, something went wrong."
             print response.text
