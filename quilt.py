@@ -141,9 +141,9 @@ class Table(object):
             elif not self._chr and 'chr' in name:
                 self._chr = c['id']
 
-            if 'start' in name:
+            if 'start' in name and not self._start:
                 self._start = c['id']
-            elif 'end' in name:
+            elif 'end' in name and not self._end:
                 self._end = c['id']
             elif not self._end and 'stop' in name:
                 self._end = c['id']                
