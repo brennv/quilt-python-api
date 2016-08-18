@@ -433,7 +433,7 @@ class Connection(object):
             userdata = response.json()
             self._tables = [Table(self, d) for d in userdata['tables']]
             self.userid = userdata['id']
-
+            self.profile = userdata['profile']
             self._pool = Pool(processes=8)
         else:
             print "Login Failed. Please check your credentials and try again."
