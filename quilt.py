@@ -95,9 +95,6 @@ class Quilt(object):
 class Table(object):
     _schema = None
     _quilts = None
-    _buffer = []
-    _search = None
-    _ordering_fields = []
     _chr = None
     _start = None
     _end = None
@@ -111,6 +108,7 @@ class Table(object):
         self.description = description
         self.owner = owner
         self.is_public = is_public
+        self._reset_iteration()
 
     def __init__(self, con, data):
         self.connection = con
@@ -120,12 +118,13 @@ class Table(object):
         self.description = data.get('description')
         self.owner = data.get('owner')
         self.is_public = data.get('is_public')
-
+        self._reset_iteration()
+        
         if data.has_key('columns'):
             self._schema = data.get('columns')
 
         if data.has_key('quilts'):
-            self._quilts = data.get('quilts')            
+            self._quilts = data.get('quilts')
 
     def __str__(self):
         return "[%04d] %s" % (self.id, self.name)
@@ -301,12 +300,35 @@ class Table(object):
         self._search = term
         return self.__iter__()
 
-    def next(self):        
+    def limit(self, limit):
+        self._limit = limit
+        return self
+
+    def _reset_iteration(self):
+        self._buffer = []
+        self._limit = None
+        self._count = 0
+        self._search = None
+        self._ordering_fields = []
+
+    def __at_limit(self):
+        return (self._limit is not None and self._count >= self._limit)
+
+    def __nextrow(self):        
+        row = self._generator.next()
+        self._count += 1
+        return row
         
+    def next(self):
+        if self.__at_limit():
+            self._reset_iteration()
+            raise StopIteration()
+
         try:
-            return self._generator.next()
+            return self.__nextrow()
         except StopIteration:
             if self.nextlink:
+                assert not self.__at_limit(), "Already checked for limit"
                 params = {}
                 if self._ordering_fields:
                     params['ordering'] = [f for f in self._ordering_fields]
@@ -322,10 +344,11 @@ class Table(object):
                 self.nextlink = data['next']
                 self._buffer = []
                 for row in data['results']:
-                    self._buffer.append(row)
+                    self._buffer.append(row)                    
                 self._generator = rowgen(self._buffer)
-                return self._generator.next()
+                return self.__nextrow()
             else:
+                self._reset_iteration()
                 raise StopIteration()
 
     def create(self, data):
