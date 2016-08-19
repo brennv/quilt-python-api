@@ -5,10 +5,7 @@ import quilt
 con = quilt.Connection('kmoore')
 source_id = 2195
 
-schema = {
-    'name' : "Transcript IDs",
-    'description' : "Transcript IDs separated from table %s" % source_id,
-    'columns' : [
+columns = [
     {'name' : 'iN_RNAseq ID',
      'sqlname' : 'in_rnaseq_id',
      'description' : 'QRID from iN_RNAseq table',
@@ -17,9 +14,10 @@ schema = {
      'sqlname' : 'transcipt_id',
      'type' : 'String'}
     ]
-    }
 
-t = con.create_table(schema)
+t = con.create_table(name="Transcript IDs",
+                     description="Transcript IDs separated from table %s" % source_id,
+                     columns=columns)
 
 def insert(t, i, buffer):
     response = t.create(buffer)

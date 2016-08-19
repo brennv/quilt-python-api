@@ -2,12 +2,9 @@
 import json
 import requests
 from datetime import datetime
-from firebase import lazy, async
 
 import quilt
 
-
-#con = quilt.Connection('kevin', 'http://localhost:5000')
 con = quilt.Connection('kmoore')
 
 def status_check(response):
@@ -49,15 +46,6 @@ def get_field(dict, key):
     finally:
         return value
 
-# babies
-# lastModified
-# __v
-# members
-# creatorId
-# _id
-# name
-
-
 columns = []
 columns.append({'name' : '_id', 'type' : 'String'})
 columns.append({'name' : 'creatorId', 'type' : 'String'})
@@ -66,9 +54,7 @@ columns.append({'name' : 'members', 'type' : 'Text'})
 columns.append({'name' : 'babies', 'type' : 'Text'})
 columns.append({'name' : 'lastModified', 'type' : 'String'})
 columns.append({'name' : '__v', 'type' : 'String'})
-nests = con.create_table({'name' : 'Nests', 'columns' : columns})
-
-#{u'bloodType': u'AB+', u'name': u'Ezra', u'dob': u'2014-06-26T01:05:05.000Z', u'gender': u'male', u'_id': {u'$oid': u'4f0697a56935d501000001d8'}, u'imgUrlSmall': u'https://s3.amazonaws.com/smallnest-prd/baby_4f0697617bf067010000014e_4f0697a56935d501000001d8_small.png'}
+nests = con.create_table(name='Nests', columns=columns)
 
 columns = []
 columns.append({'name' : '_id', 'type' : 'String'})
@@ -77,15 +63,10 @@ columns.append({'name' : 'dob', 'type' : 'DateTime'})
 columns.append({'name' : 'gender', 'type' : 'String'})
 columns.append({'name' : 'bloodType', 'type' : 'String'})
 columns.append({'name' : 'imgUrlSmall', 'type' : 'Text'})
-babies = con.create_table({'name' : 'Babies', 'columns' : columns})
+babies = con.create_table(name='Babies', columns=columns)
 
-fields = {}
-for c in nests.columns:
-    fields[c['name']] = c
-
-baby_fields = {}
-for c in babies.columns:
-    baby_fields[c['name']] = c
+fields = {c.name : c for c in nests.columns}
+baby_fields = {c.name : c for c in babies.columns}
 
 #all_keys = {}
 count = 0
@@ -103,14 +84,14 @@ with open('/Users/kmoore/Downloads/nests.json', 'rb') as file:
 
         row = {}
         for k in nest.keys():
-            sqlname = fields[k]['sqlname']
+            sqlname = fields[k].field
             row[sqlname] = get_field(nest, k)
 
         nest_babies = nest.get('babies') if nest.has_key('babies') else []
         for b in nest_babies:
             baby_row = {}
             for k in b.keys():
-                sqlname = baby_fields[k]['sqlname']
+                sqlname = baby_fields[k].field
                 baby_row[sqlname] = get_field(b, k)
             babies_buffer.append(baby_row)
          

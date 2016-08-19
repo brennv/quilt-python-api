@@ -2,11 +2,10 @@
 import json
 import requests
 from datetime import datetime
-from firebase import lazy, async
 
 import quilt
 
-con = quilt.Connection('kmoore')
+con = quilt.Connection('kevin')
 
 def status_check(response):
     if response:
@@ -82,11 +81,9 @@ columns.append({'name' : 'lastUpdatedByUserId', 'type' : 'String'})
 columns.append({'name' : 'isDeleted', 'type' : 'String'})
 columns.append({'name' : '__v', 'type' : 'String'})
 
-t = con.create_table({'name' : 'Baby Events', 'columns' : columns})
+t = con.create_table(name='Baby Events', columns=columns)
 
-fields = {}
-for c in t.columns:
-    fields[c['name']] = c
+fields = {c.name : c for c in t.columns}
 
 count = 0
 rowcount = 0
@@ -102,7 +99,7 @@ with open('/Users/kmoore/Downloads/babyevents.json', 'rb') as file:
 
         row = {}
         for k in event.keys():
-            sqlname = fields[k]['sqlname']
+            sqlname = fields[k].field
             row[sqlname] = get_field(event, k)
         buffer.append(row)
         if len(buffer) >= 250:
