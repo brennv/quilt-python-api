@@ -182,12 +182,16 @@ and import quilt.
 
 Connect to Quilt by creating a Connection object:
 
+```python
 import quilt
 connection = quilt.Connection(username)
 * enter your password
+```
 
 The connection will contain a list of your Quilt tables:
+```python
 connection.tables
+```
 
 ### Search for Data Sets
 You can also find tables by searching your own tables and Quilt's public data sets
@@ -233,8 +237,10 @@ Search, order_by and limit can be combined to return just the data you
 want to see. For example, to return the top 2 finishers with the name Sally
 from a table of race results (race_results: [name_000, time_001]), you could write:
 
+```python
 for result in race_results.search('Sally').order_by('-time_001').limit(2):
     print row
+```
 
 ### Pandas DataFrame
 
@@ -255,7 +261,8 @@ columns explicitly with set_bed_cols.
 mytable.set_bed_cols(mytable.chr_001, mytable.start_002, mytable.end_003)
 
 Once the bed columns are set for both tables, they can be intersected and subtracted.
+```python
 result = tableA.intersect(tableB)
 result = tableA.intersect_wao(tableB)
 result = tableA.subtract(tableB)
-
+```
