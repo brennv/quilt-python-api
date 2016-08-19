@@ -254,7 +254,7 @@ class Table(object):
                 self._quilts = []
         return self._quilts
 
-    def df(self, limit=None):
+    def df(self):
         if not PANDAS:
             print "Install pandas to use DataFrames: http://pandas.pydata.org/"
             return None
