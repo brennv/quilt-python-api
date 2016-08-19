@@ -418,6 +418,9 @@ class Table(object):
         return response
 
     def create_async(self, data, callback=None):
+        if not self.connection.pool:
+            self.connection.pool.create_thread_pool()
+            
         """
         Use an asynchronous POST request with the process pool.
         """
@@ -517,7 +520,6 @@ class Connection(object):
             self.profile = userdata['profile']
             if SQLALCHEMY:
                 self._sqlengine = sqlalchemy.create_engine(self.profile.get('odbc').get('url'))
-            self._pool = Pool(processes=8)
         else:
             print "Login Failed. Please check your credentials and try again."
 
@@ -525,6 +527,9 @@ class Connection(object):
         if self._pool:
             self._pool.close()
             self._pool.join()
+
+    def create_thread_pool(self, nump=8):
+        self._pool = Pool(processes=nump)
 
     def search(self, search):
         matches = []
