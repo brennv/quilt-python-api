@@ -185,7 +185,7 @@ Connect to Quilt by creating a Connection object:
 ```python
 import quilt
 connection = quilt.Connection(username)
-* enter your password
+Password: *enter your password*
 ```
 
 The connection will contain a list of your Quilt tables:
@@ -195,39 +195,52 @@ connection.tables
 
 ### Search for Data Sets
 You can also find tables by searching your own tables and Quilt's public data sets
+```python
 connection.search('term')
+```
 
 ## Table
 
 Each Table object has a list of Columns
+```python
 mytable.columns
+```
 
 After the columns have been fetched, columns are available as table attributes.
+```python
 mytable.column1
+```
 
 ### Accessing Table Data
 
 Tables are iterable. To access table data:
+```python
 for row in mytable:
     print row
+```
 
 #### Search
 Search for matching rows in a table by calling search.
-
+```python
 for row in mytable.search('foo'):
     print row
+```
 
 #### Order By
 Sort the table by any column or set of columns.
-
+```python
 mytable.order_by('column1')
-
+```
+```python
 mytable.order_by(mytable.column1.field)
-
+```
+```python
 mytable.order_by(['column2', 'column1'])
-
+```
 To sort in descending order, add a "-" in front of the column field name:
+```python
 mytable.order_by('-column1')
+```
 
 #### Limit
 Limit the number of rows returned by calling limit(number_of_rows).
