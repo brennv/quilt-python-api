@@ -5,9 +5,7 @@ from datetime import datetime
 
 import quilt
 
-
-con = quilt.Connection('kevin', 'http://localhost:5000')
-#con = quilt.Connection('kmoore')
+con = quilt.Connection('kmoore')
 
 def status_check(response):
     if response:
