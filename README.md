@@ -168,3 +168,94 @@ Quilt info as JSON object, includes `sqlname` field with the quilt's identifier.
 ```
 #### Returns
 JSON object representing the result table.
+
+# Python
+
+The Quilt Python connector uses the Quilt REST API and SQL Alchemy (http://docs.sqlalchemy.org/),
+if installed, to access and update data sets in Quilt. Quilt tables are available as dictionaries
+or Pandas (http://pandas.pydata.org/) DataFrames.
+
+## Connection
+
+To use the Quilt Python connector, add this repository to your PYTHONPATH
+and import quilt.
+
+Connect to Quilt by creating a Connection object:
+
+import quilt
+connection = quilt.Connection(<your Quilt username>)
+* enter your password
+
+The connection will contain a list of your Quilt tables:
+connection.tables
+
+### Search for Data Sets
+You can also find tables by searching your own tables and Quilt's public data sets
+connection.search('term')
+
+## Table
+
+Each Table object has a list of Columns
+mytable.columns
+
+After the columns have been fetched, columns are available as table attributes.
+mytable.column1
+
+### Accessing Table Data
+
+Tables are iterable. To access table data:
+for row in mytable:
+    print row
+
+#### Search
+Search for matching rows in a table by calling search.
+
+for row in mytable.search('foo'):
+    print row
+
+#### Order By
+Sort the table by any column or set of columns.
+
+mytable.order_by('column1')
+
+mytable.order_by(mytable.column1.field)
+
+mytable.order_by(['column2', 'column1'])
+
+To sort in descending order, add a "-" in front of the column field name:
+mytable.order_by('-column1')
+
+#### Limit
+Limit the number of rows returned by calling limit(<number of rows>).
+
+#### Putting it all together
+Search, order_by and limit can be combined to return just the data you
+want to see. For example, to return the top 2 finishers with the name Sally
+from a table of race results (race_results: [name_000, time_001]), you could write:
+
+for result in race_results.search('Sally').order_by('-time_001').limit(2):
+    print row
+
+### Pandas DataFrame
+
+Access a table's data as a Pandas DataFrame by calling
+mytable.df()
+
+You can also combine the querying methods above to access particular rows.
+race_results.search('Sally').order_by('-time_001').limit(2).df()
+
+### Gene Math
+
+Quilt supports intersect and subtract for tables that store genomic regions. Those
+operations assume that tables have columns storing: Chromsome, start and end. The
+function get_bed_cols tries to infer those columns based on column names.
+
+If the guessing fails, or to override the guess, set the chromosome, start, end
+columns explicitly with set_bed_cols.
+mytable.set_bed_cols(mytable.chr_001, mytable.start_002, mytable.end_003)
+
+Once the bed columns are set for both tables, they can be intersected and subtracted.
+result = tableA.intersect(tableB)
+result = tableA.intersect_wao(tableB)
+result = tableA.subtract(tableB)
+

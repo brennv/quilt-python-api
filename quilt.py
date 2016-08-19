@@ -9,6 +9,13 @@ try:
 except:
     PANDAS = False
 
+try:
+    import psycopg2
+    import sqlalchemy
+    SQLALCHEMY = True
+except:
+    SQLALCHEMY = False
+
 from mimetypes import MimeTypes
 from multiprocessing import Pool
 
@@ -247,20 +254,48 @@ class Table(object):
                 self._quilts = []
         return self._quilts
 
-    def df(self, limit=None):
+    def df(self):
         if not PANDAS:
             print "Install pandas to use DataFrames: http://pandas.pydata.org/"
-            return None
+            return None        
 
-        data = []
-        index = []
-        columns = [c['sqlname'] for c in self.columns]
-        for i, row in enumerate(self):
-            if limit and i>limit:
-                break
-            index.append(row['qrid'])
-            data.append(row)
-        return pandas.DataFrame(data, columns=columns, index=index)
+        if self.connection._sqlengine and self._search is None:            
+            type_map = {
+                'String' : sqlalchemy.String,
+                'Number' : sqlalchemy.Float,
+                'Text' : sqlalchemy.Text,
+                'Date' : sqlalchemy.Date,
+                'DateTime' : sqlalchemy.DateTime,
+                'Image' : sqlalchemy.String }
+            
+            columns = [sqlalchemy.Column(c.field, type_map[c.type]) for c in self.columns]
+            table = sqlalchemy.Table(self.sqlname, sqlalchemy.MetaData(),*columns)
+
+            stmt = sqlalchemy.select([table])
+            if self._ordering_fields:
+                ordering_clause = []
+                for f in self._ordering_fields:
+                    if f.startswith("-"):
+                        fname = f.lstrip("-")
+                        ordering_clause.append(getattr(table.c, fname).desc())
+                    else:
+                        ordering_clause.append(getattr(table.c, f).asc())
+                stmt = stmt.order_by(*ordering_clause)
+
+            if self._limit is not None:
+                stmt = stmt.limit(self._limit)
+            
+            return pandas.read_sql(stmt, self.connection._sqlengine)
+        else:
+            data = []
+            index = []
+            columns = [c['sqlname'] for c in self.columns]
+            for i, row in enumerate(self):
+                if limit and i>limit:
+                    break
+                index.append(row['qrid'])
+                data.append(row)
+            return pandas.DataFrame(data, columns=columns, index=index)
 
     def __getitem__(self, qrid):
         response = requests.get("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
@@ -470,7 +505,7 @@ class Connection(object):
         self._tables = None
         self._files = None
         self._pool = None
-
+        self._sqlengine = None
         response = requests.get("%s/users/%s/" % (self.url, username),
                                 headers=HEADERS,
                                 auth=requests.auth.HTTPBasicAuth(self.username, self.password))
@@ -479,7 +514,9 @@ class Connection(object):
             userdata = response.json()
             self._tables = [Table(self, d) for d in userdata['tables']]
             self.userid = userdata['id']
-
+            self.profile = userdata['profile']
+            if SQLALCHEMY:
+                self._sqlengine = sqlalchemy.create_engine(self.profile.get('odbc').get('url'))
             self._pool = Pool(processes=8)
         else:
             print "Login Failed. Please check your credentials and try again."
