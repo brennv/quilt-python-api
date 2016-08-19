@@ -199,6 +199,29 @@ You can also find tables by searching your own tables and Quilt's public data se
 connection.search('term')
 ```
 
+### Get Table
+Get a table by Table id using get_table:
+```python
+t = connection.get_table(1234)
+```
+
+### Create a New Table
+Using the connection, you can create new tables in Quilt. To create an empty
+table:
+```python
+t = connection.create_table(name, description)
+```
+
+To create a table from an input file:
+```python
+t = connection.create_table(name, description, inputfile=path_to_input_file)
+```
+
+Or, to create a new table from a DataFrame:
+```python
+t = connection.save_df(df, name, description="table description")
+```
+
 ## Table
 
 Each Table object has a list of Columns
@@ -231,9 +254,11 @@ Sort the table by any column or set of columns.
 ```python
 mytable.order_by('column1')
 ```
+or
 ```python
 mytable.order_by(mytable.column1.field)
 ```
+or
 ```python
 mytable.order_by(['column2', 'column1'])
 ```
