@@ -90,7 +90,26 @@ class Quilt(object):
             self.table._quilts = None
             self.id = None
         return response.status_code
-        
+
+
+class Column(object):    
+    def __init__(self, table, id):
+        self.table = table
+        self.id = id
+
+    def __init__(self, table, data):
+        self.table = table
+        self.id = data['id']
+        self.name = data['name']
+        self.description = data['description']
+        self.type = data['type']
+        self.field = data['sqlname']
+
+    def __str__(self):
+        return "%s-%s (%s)" % (self.type, self.field, self.name)
+
+    def __repr__(self):
+        return "<quilt.Column %s.%s>" % (self.table.sqlname, self.field)
 
 class Table(object):
     _schema = None
@@ -121,31 +140,34 @@ class Table(object):
         self._reset_iteration()
         
         if data.has_key('columns'):
-            self._schema = data.get('columns')
-
+            self._schema = [Column(self, cdata) for cdata in data.get('columns')]
+            
         if data.has_key('quilts'):
             self._quilts = data.get('quilts')
 
     def __str__(self):
         return "[%04d] %s" % (self.id, self.name)
 
+    def __repr__(self):
+        return "<quilt.Table %d.%s>" % (self.id, self.sqlname)
+
     def __eq__(self, table):
         return self.id == table.id
 
     def _guess_bed_columns(self):
         for c in self.columns:
-            name = c['name'].lower()
+            name = c.name.lower()
             if 'chromosome' in name:
-                self._chr = c['id']
+                self._chr = c
             elif not self._chr and 'chr' in name:
-                self._chr = c['id']
+                self._chr = c
 
             if 'start' in name and not self._start:
-                self._start = c['id']
+                self._start = c
             elif 'end' in name and not self._end:
-                self._end = c['id']
+                self._end = c
             elif not self._end and 'stop' in name:
-                self._end = c['id']                
+                self._end = c
 
     def delete(self):
         response = requests.delete("%s/tables/%s/" % (self.connection.url, self.id),
@@ -171,7 +193,11 @@ class Table(object):
                                     auth=self.connection.auth)
             data = response.json()
             if data.has_key('columns'):
-                self._schema = data.get('columns')
+                self._schema = [Column(self, cdata) for cdata in data.get('columns')]
+
+        for c in self._schema:
+            setattr(self, c.field, c)
+
         return self._schema    
 
     def add_column(self, name, type, sqlname=None, description=None):
@@ -196,8 +222,8 @@ class Table(object):
             print response.text
             return None
 
-    def delete_column(self, column_id):
-        response = requests.delete("%s/tables/%s/columns/%s/" % (self.connection.url, self.id, column_id),
+    def delete_column(self, column):
+        response = requests.delete("%s/tables/%s/columns/%s/" % (self.connection.url, self.id, column.id),
                                    headers=HEADERS,
                                    auth=self.connection.auth)
         if response.status_code == requests.codes.no_content:            
@@ -215,9 +241,6 @@ class Table(object):
                                     headers=HEADERS,
                                     auth=self.connection.auth)
             data = response.json()
-            if data.has_key('columns'):
-                self._schema = data.get('columns')
-                
             if data.has_key('quilts'):
                 self._quilts = [Quilt(self, d) for d in data.get('quilts')]
             else:
@@ -372,8 +395,8 @@ class Table(object):
     def quilt(self, left_column, right_column):
         data = {}
         data['left_table'] = self.id
-        data['left_column'] = left_column
-        data['right_column'] = right_column
+        data['left_column'] = left_column.id
+        data['right_column'] = right_column.id
 
         response = requests.post("%s/quilts/" % self.connection.url,
                                  data = json.dumps(data),
@@ -392,9 +415,9 @@ class Table(object):
             return None
 
     def set_bed_cols(self, chr, start, end):
-        self._chr = chr
-        self._start = start
-        self._end = end
+        self._chr = chr.id
+        self._start = start.id
+        self._end = end.id
 
     def get_bed_cols(self):
         if not (self._chr and self._start and self._end):
