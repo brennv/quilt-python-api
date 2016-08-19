@@ -418,16 +418,13 @@ class Table(object):
         return response
 
     def create_async(self, data, callback=None):
-        if not self.connection.pool:
-            self.connection.pool.create_thread_pool()
-            
         """
         Use an asynchronous POST request with the process pool.
         """
         url = "%s/data/%s/rows/" % (self.connection.url, self.id)
-        res = self.connection.pool.apply_async(make_post_request,
-                                               args=(url, json.dumps(data), self.connection.auth),
-                                               callback=callback)
+        res = self.connection.get_thread_pool().apply_async(make_post_request,
+                                                            args=(url, json.dumps(data), self.connection.auth),
+                                                            callback=callback)
         return res
 
     def quilt(self, left_column, right_column):
@@ -528,8 +525,10 @@ class Connection(object):
             self._pool.close()
             self._pool.join()
 
-    def create_thread_pool(self, nump=8):
-        self._pool = Pool(processes=nump)
+    def get_thread_pool(self):
+        if not self._pool:
+            self._pool = Pool(processes=8)
+        return self._pool
 
     def search(self, search):
         matches = []
@@ -598,16 +597,22 @@ class Connection(object):
             print response.text
             return None
 
-    def create_table(self, name, description=None, inputfile=None):
+    def create_table(self, name, description=None, columns=None, inputfile=None):
         data = { 'name' : name }
         if description:
             data['description'] = description
         if inputfile:
+            if columns:
+                print "Please specify either a set of columns or an input file, not both"
+                return None
+                
             if isinstance(inputfile, File):
                 data['csvfile'] = inputfile.fullpath
             else:
                 f = self.upload(inputfile)
                 data['csvfile'] = f.fullpath
+        elif columns:
+            data['columns'] = columns
             
         response = requests.post("%s/tables/" % self.url,
                                  data = json.dumps(data),
