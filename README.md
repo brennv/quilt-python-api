@@ -183,7 +183,7 @@ and import quilt.
 Connect to Quilt by creating a Connection object:
 
 import quilt
-connection = quilt.Connection(<your Quilt username>)
+connection = quilt.Connection(username)
 * enter your password
 
 The connection will contain a list of your Quilt tables:
@@ -226,7 +226,7 @@ To sort in descending order, add a "-" in front of the column field name:
 mytable.order_by('-column1')
 
 #### Limit
-Limit the number of rows returned by calling limit(<number of rows>).
+Limit the number of rows returned by calling limit(number_of_rows).
 
 #### Putting it all together
 Search, order_by and limit can be combined to return just the data you
