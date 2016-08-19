@@ -250,15 +250,18 @@ for row in mytable.search('foo'):
 ```
 
 #### Order By
-Sort the table by any column or set of columns.
+Sort the table by any column or set of columns. You can set the ordering by passing
+a string that is the column's field (name in the database).
+
 ```python
 mytable.order_by('column1')
 ```
-or
+
+You can find column field names with their ".field" attribute:
 ```python
 mytable.order_by(mytable.column1.field)
 ```
-or
+You can sort by multiple columns by passing a list of fields.
 ```python
 mytable.order_by(['column2', 'column1'])
 ```
