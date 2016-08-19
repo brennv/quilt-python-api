@@ -257,10 +257,35 @@ class Table(object):
     def df(self):
         if not PANDAS:
             print "Install pandas to use DataFrames: http://pandas.pydata.org/"
-            return None
+            return None        
 
-        if self.connection._sqlengine:
-            return pandas.read_sql_table(self.sqlname, self.connection._sqlengine)
+        if self.connection._sqlengine and self._search is None:            
+            type_map = {
+                'String' : sqlalchemy.String,
+                'Number' : sqlalchemy.Float,
+                'Text' : sqlalchemy.Text,
+                'Date' : sqlalchemy.Date,
+                'DateTime' : sqlalchemy.DateTime,
+                'Image' : sqlalchemy.String }
+            
+            columns = [sqlalchemy.Column(c.field, type_map[c.type]) for c in self.columns]
+            table = sqlalchemy.Table(self.sqlname, sqlalchemy.MetaData(),*columns)
+
+            stmt = sqlalchemy.select([table])
+            if self._ordering_fields:
+                ordering_clause = []
+                for f in self._ordering_fields:
+                    if f.startswith("-"):
+                        fname = f.lstrip("-")
+                        ordering_clause.append(getattr(table.c, fname).desc())
+                    else:
+                        ordering_clause.append(getattr(table.c, f).asc())
+                stmt = stmt.order_by(*ordering_clause)
+
+            if self._limit is not None:
+                stmt = stmt.limit(self._limit)
+            
+            return pandas.read_sql(stmt, self.connection._sqlengine)
         else:
             data = []
             index = []
