@@ -9,6 +9,13 @@ try:
 except:
     PANDAS = False
 
+try:
+    import psycopg2
+    import sqlalchemy
+    SQLALCHEMY = True
+except:
+    SQLALCHEMY = False
+
 from mimetypes import MimeTypes
 from multiprocessing import Pool
 
@@ -252,15 +259,18 @@ class Table(object):
             print "Install pandas to use DataFrames: http://pandas.pydata.org/"
             return None
 
-        data = []
-        index = []
-        columns = [c['sqlname'] for c in self.columns]
-        for i, row in enumerate(self):
-            if limit and i>limit:
-                break
-            index.append(row['qrid'])
-            data.append(row)
-        return pandas.DataFrame(data, columns=columns, index=index)
+        if self.connection._sqlengine:
+            return pandas.read_sql_table(self.sqlname, self.connection._sqlengine)
+        else:
+            data = []
+            index = []
+            columns = [c['sqlname'] for c in self.columns]
+            for i, row in enumerate(self):
+                if limit and i>limit:
+                    break
+                index.append(row['qrid'])
+                data.append(row)
+            return pandas.DataFrame(data, columns=columns, index=index)
 
     def __getitem__(self, qrid):
         response = requests.get("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
@@ -470,7 +480,7 @@ class Connection(object):
         self._tables = None
         self._files = None
         self._pool = None
-
+        self._sqlengine = None
         response = requests.get("%s/users/%s/" % (self.url, username),
                                 headers=HEADERS,
                                 auth=requests.auth.HTTPBasicAuth(self.username, self.password))
@@ -480,6 +490,8 @@ class Connection(object):
             self._tables = [Table(self, d) for d in userdata['tables']]
             self.userid = userdata['id']
             self.profile = userdata['profile']
+            if SQLALCHEMY:
+                self._sqlengine = sqlalchemy.create_engine(self.profile.get('odbc').get('url'))
             self._pool = Pool(processes=8)
         else:
             print "Login Failed. Please check your credentials and try again."
