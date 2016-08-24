@@ -1,6 +1,22 @@
 import json
 import getpass
 import requests
+import sys
+
+try:
+    import pandas
+    PANDAS = True
+except:
+    PANDAS = False
+
+try:
+    import psycopg2
+    import sqlalchemy
+    SQLALCHEMY = True
+except:
+    SQLALCHEMY = False
+
+from mimetypes import MimeTypes
 from multiprocessing import Pool
 
 HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
@@ -26,10 +42,39 @@ def rowgen(buffer):
 
 class File(object):
     def __init__(self, connection, data):
+        self._data = data
+        self.connection = connection
+        self.id = data['id']
         self.owner = data['owner']
         self.filename = data['filename']
+        self.fullpath = data['fullpath']
+        self.url = data['url']
         self.creds = data['s3creds']
+        self.upload_url = data['upload_url']
+        self.status = data['status']
 
+    def refresh(self):
+        response = requests.get("%s/files/%s/" % (self.connection.url, self.id),
+                                headers=HEADERS,
+                                auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            self.__init__(self.connection, response.json())
+        else:
+            print "Oops, something went wrong."
+            print response.status_code
+        return response
+
+    def download(self):
+        url = self.url
+        outfile = self.filename
+
+        r = requests.get(url, stream=True)
+        with open(outfile, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024): 
+                if chunk: # filter out keep-alive new chunks
+                    f.write(chunk)
+        return outfile
+        
 
 class Quilt(object):
     def __init__(self, table, data):
@@ -52,14 +97,30 @@ class Quilt(object):
             self.table._quilts = None
             self.id = None
         return response.status_code
-        
+
+
+class Column(object):    
+    def __init__(self, table, id):
+        self.table = table
+        self.id = id
+
+    def __init__(self, table, data):
+        self.table = table
+        self.id = data['id']
+        self.name = data['name']
+        self.description = data['description']
+        self.type = data['type']
+        self.field = data['sqlname']
+
+    def __str__(self):
+        return "%s-%s (%s)" % (self.type, self.field, self.name)
+
+    def __repr__(self):
+        return "<quilt.Column %s.%s>" % (self.table.sqlname, self.field)
 
 class Table(object):
     _schema = None
     _quilts = None
-    _buffer = []
-    _search = None
-    _ordering_fields = []
     _chr = None
     _start = None
     _end = None
@@ -73,6 +134,7 @@ class Table(object):
         self.description = description
         self.owner = owner
         self.is_public = is_public
+        self._reset_iteration()
 
     def __init__(self, con, data):
         self.connection = con
@@ -82,33 +144,37 @@ class Table(object):
         self.description = data.get('description')
         self.owner = data.get('owner')
         self.is_public = data.get('is_public')
-
+        self._reset_iteration()
+        
         if data.has_key('columns'):
-            self._schema = data.get('columns')
-
+            self._schema = [Column(self, cdata) for cdata in data.get('columns')]
+            
         if data.has_key('quilts'):
-            self._quilts = data.get('quilts')            
+            self._quilts = data.get('quilts')
 
     def __str__(self):
         return "[%04d] %s" % (self.id, self.name)
+
+    def __repr__(self):
+        return "<quilt.Table %d.%s>" % (self.id, self.sqlname)
 
     def __eq__(self, table):
         return self.id == table.id
 
     def _guess_bed_columns(self):
         for c in self.columns:
-            name = c['name'].lower()
+            name = c.name.lower()
             if 'chromosome' in name:
-                self._chr = c['id']
+                self._chr = c
             elif not self._chr and 'chr' in name:
-                self._chr = c['id']
+                self._chr = c
 
-            if 'start' in name:
-                self._start = c['id']
-            elif 'end' in name:
-                self._end = c['id']
+            if 'start' in name and not self._start:
+                self._start = c
+            elif 'end' in name and not self._end:
+                self._end = c
             elif not self._end and 'stop' in name:
-                self._end = c['id']                
+                self._end = c
 
     def delete(self):
         response = requests.delete("%s/tables/%s/" % (self.connection.url, self.id),
@@ -134,7 +200,11 @@ class Table(object):
                                     auth=self.connection.auth)
             data = response.json()
             if data.has_key('columns'):
-                self._schema = data.get('columns')
+                self._schema = [Column(self, cdata) for cdata in data.get('columns')]
+
+        for c in self._schema:
+            setattr(self, c.field, c)
+
         return self._schema    
 
     def add_column(self, name, type, sqlname=None, description=None):
@@ -159,8 +229,8 @@ class Table(object):
             print response.text
             return None
 
-    def delete_column(self, column_id):
-        response = requests.delete("%s/tables/%s/columns/%s/" % (self.connection.url, self.id, column_id),
+    def delete_column(self, column):
+        response = requests.delete("%s/tables/%s/columns/%s/" % (self.connection.url, self.id, column.id),
                                    headers=HEADERS,
                                    auth=self.connection.auth)
         if response.status_code == requests.codes.no_content:            
@@ -178,14 +248,54 @@ class Table(object):
                                     headers=HEADERS,
                                     auth=self.connection.auth)
             data = response.json()
-            if data.has_key('columns'):
-                self._schema = data.get('columns')
-                
             if data.has_key('quilts'):
                 self._quilts = [Quilt(self, d) for d in data.get('quilts')]
             else:
                 self._quilts = []
         return self._quilts
+
+    def df(self):
+        if not PANDAS:
+            print "Install pandas to use DataFrames: http://pandas.pydata.org/"
+            return None        
+
+        if self.connection._sqlengine and self._search is None:            
+            type_map = {
+                'String' : sqlalchemy.String,
+                'Number' : sqlalchemy.Float,
+                'Text' : sqlalchemy.Text,
+                'Date' : sqlalchemy.Date,
+                'DateTime' : sqlalchemy.DateTime,
+                'Image' : sqlalchemy.String }
+            
+            columns = [sqlalchemy.Column(c.field, type_map[c.type]) for c in self.columns]
+            table = sqlalchemy.Table(self.sqlname, sqlalchemy.MetaData(),*columns)
+
+            stmt = sqlalchemy.select([table])
+            if self._ordering_fields:
+                ordering_clause = []
+                for f in self._ordering_fields:
+                    if f.startswith("-"):
+                        fname = f.lstrip("-")
+                        ordering_clause.append(getattr(table.c, fname).desc())
+                    else:
+                        ordering_clause.append(getattr(table.c, f).asc())
+                stmt = stmt.order_by(*ordering_clause)
+
+            if self._limit is not None:
+                stmt = stmt.limit(self._limit)
+            
+            return pandas.read_sql(stmt, self.connection._sqlengine)
+        else:
+            data = []
+            index = []
+            columns = [c['sqlname'] for c in self.columns]
+            for i, row in enumerate(self):
+                if limit and i>limit:
+                    break
+                index.append(row['qrid'])
+                data.append(row)
+            return pandas.DataFrame(data, columns=columns, index=index)
 
     def __getitem__(self, qrid):
         response = requests.get("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
@@ -229,6 +339,11 @@ class Table(object):
                                  auth=self.connection.auth)
         return response
 
+    def export(self):
+        response = requests.get("%s/data/%s/rows/export" % (self.connection.url, self.id),
+                                headers=HEADERS,
+                                auth=self.connection.auth)        
+        return File(self.connection, response.json())
 
     def order_by(self, fields):
         if not fields:
@@ -237,9 +352,15 @@ class Table(object):
             self._ordering_fields = fields
         else:
             self._ordering_fields = [fields]
+        return self.__iter__()
 
     def search(self, term):
         self._search = term
+        return self.__iter__()
+
+    def limit(self, limit):
+        self._limit = limit
+        return self
 
     @property
     def commits(self):
@@ -270,12 +391,31 @@ class Table(object):
         else:
             print response.text
 
-    def next(self):        
+    def _reset_iteration(self):
+        self._buffer = []
+        self._limit = None
+        self._count = 0
+        self._search = None
+        self._ordering_fields = []
+
+    def __at_limit(self):
+        return (self._limit is not None and self._count >= self._limit)
+
+    def __nextrow(self):        
+        row = self._generator.next()
+        self._count += 1
+        return row
         
+    def next(self):
+        if self.__at_limit():
+            self._reset_iteration()
+            raise StopIteration()
+
         try:
-            return self._generator.next()
+            return self.__nextrow()
         except StopIteration:
             if self.nextlink:
+                assert not self.__at_limit(), "Already checked for limit"
                 params = {}
                 if self._ordering_fields:
                     params['ordering'] = [f for f in self._ordering_fields]
@@ -289,13 +429,13 @@ class Table(object):
                                         auth=self.connection.auth)
                 data = response.json()
                 self.nextlink = data['next']
-                print self.nextlink
                 self._buffer = []
                 for row in data['results']:
-                    self._buffer.append(row)
+                    self._buffer.append(row)                    
                 self._generator = rowgen(self._buffer)
-                return self._generator.next()
+                return self.__nextrow()
             else:
+                self._reset_iteration()
                 raise StopIteration()
 
     def create(self, data):
@@ -311,16 +451,16 @@ class Table(object):
         Use an asynchronous POST request with the process pool.
         """
         url = "%s/data/%s/rows/" % (self.connection.url, self.id)
-        res = self.connection.pool.apply_async(make_post_request,
-                                               args=(url, json.dumps(data), self.connection.auth),
-                                               callback=callback)
+        res = self.connection.get_thread_pool().apply_async(make_post_request,
+                                                            args=(url, json.dumps(data), self.connection.auth),
+                                                            callback=callback)
         return res
 
     def quilt(self, left_column, right_column):
         data = {}
         data['left_table'] = self.id
-        data['left_column'] = left_column
-        data['right_column'] = right_column
+        data['left_column'] = left_column.id
+        data['right_column'] = right_column.id
 
         response = requests.post("%s/quilts/" % self.connection.url,
                                  data = json.dumps(data),
@@ -339,9 +479,9 @@ class Table(object):
             return None
 
     def set_bed_cols(self, chr, start, end):
-        self._chr = chr
-        self._start = start
-        self._end = end
+        self._chr = chr.id
+        self._start = start.id
+        self._end = end.id
 
     def get_bed_cols(self):
         if not (self._chr and self._start and self._end):
@@ -393,7 +533,8 @@ class Connection(object):
         self.userid = None
         self._tables = None
         self._files = None
-
+        self._pool = None
+        self._sqlengine = None
         response = requests.get("%s/users/%s/" % (self.url, username),
                                 headers=HEADERS,
                                 auth=requests.auth.HTTPBasicAuth(self.username, self.password))
@@ -402,14 +543,21 @@ class Connection(object):
             userdata = response.json()
             self._tables = [Table(self, d) for d in userdata['tables']]
             self.userid = userdata['id']
-
-            self.pool = Pool(processes=8)
+            self.profile = userdata['profile']
+            if SQLALCHEMY:
+                self._sqlengine = sqlalchemy.create_engine(self.profile.get('odbc').get('url'))
         else:
             print "Login Failed. Please check your credentials and try again."
 
     def __del__(self):
-        self.pool.close()
-        self.pool.join()
+        if self._pool:
+            self._pool.close()
+            self._pool.join()
+
+    def get_thread_pool(self):
+        if not self._pool:
+            self._pool = Pool(processes=8)
+        return self._pool
 
     def search(self, search):
         matches = []
@@ -435,7 +583,7 @@ class Connection(object):
     @property
     def tables(self):
         if not self._tables:
-            response = requests.get("%s/users/%s/" % (self.url, username),
+            response = requests.get("%s/users/%s/" % (self.url, self.username),
                                     headers=HEADERS,
                                     auth=requests.auth.HTTPBasicAuth(self.username, self.password))
             self.status_code = response.status_code
@@ -471,10 +619,30 @@ class Connection(object):
                                 headers=HEADERS,
                                 auth=self.auth)        
         
-        print response.status_code
-        return Table(self, response.json())
+        if response.status_code == requests.codes.ok:
+            return Table(self, response.json())
+        else:
+            print "Oops, something went wrong."
+            print response.text
+            return None
 
-    def create_table(self, data):
+    def create_table(self, name, description=None, columns=None, inputfile=None):
+        data = { 'name' : name }
+        if description:
+            data['description'] = description
+        if inputfile:
+            if columns:
+                print "Please specify either a set of columns or an input file, not both"
+                return None
+                
+            if isinstance(inputfile, File):
+                data['csvfile'] = inputfile.fullpath
+            else:
+                f = self.upload(inputfile)
+                data['csvfile'] = f.fullpath
+        elif columns:
+            data['columns'] = columns
+            
         response = requests.post("%s/tables/" % self.url,
                                  data = json.dumps(data),
                                  headers=HEADERS,
@@ -485,6 +653,71 @@ class Connection(object):
         else:
             print response.text
             return response.text
+
+    def save_df(self, df, name, description=None):
+        type_map = { 'object' : 'String',
+                     'float16' : 'Number',
+                     'float32' : 'Number',
+                     'float64' : 'Number',
+                     'int8' : 'Number',
+                     'int16' : 'Number',
+                     'int32' : 'Number',
+                     'int64' : 'Number',
+                     'unicode' : 'String' }
+        
+        if not PANDAS:
+            print "Install pandas to use DataFrames: http://pandas.pydata.org/"
+            return None
+
+        schema = { 'name' : name, 'columns' : [] }
+        if description:
+            schema['description'] = description
+            
+        for i, col in enumerate(df.columns):
+            dt = df.dtypes[i]
+            ctype = type_map.get(str(dt), None)
+            if not ctype:
+                print "Oops, unrecognized type %s in Data Frame" % dt
+                return None
+            
+            schema['columns'].append({'name' : col, 'type' : ctype }) 
+
+        response = requests.post("%s/tables/" % self.url,
+                                 data = json.dumps(schema),
+                                 headers=HEADERS,
+                                 auth=self.auth)
+
+        if response.status_code == requests.codes.ok:
+            table = Table(self, response.json())
+        else:
+            print response.text
+            return None
+
+        response = table.create(df.to_dict('records').values())
+        if response.status_code != requests.codes.ok:
+            print "Oops, something went wrong."
+            print response.text
+
+        return table
+
+    def upload(self, filepath):
+        filename = filepath.split('/')[-1]
+        mime = MimeTypes()
+        mime_type = mime.guess_type(filename)
+        data = { 'filename' : filename, 'mime_type' : mime_type }
+        response = requests.post("%s/files/" % self.url,
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.auth)
+
+        if response.status_code == requests.codes.created:
+            f = File(self, response.json())
+            with open(filepath, 'rb') as localfile:
+                response = requests.put(f.upload_url,
+                                        data=localfile)
+                return f
+        else:
+            print response.text
 
 
     
