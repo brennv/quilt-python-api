@@ -408,9 +408,10 @@ Access a table’s data as a Pandas DataFrame by calling mytable.df()
 
 You can also combine the querying methods above to access particular
 rows.
+
 .. code:: python
 
-          race_results.search('Sally').order_by('-time\_001').limit(2).df()
+    race_results.search('Sally').order_by('-time\_001').limit(2).df()
 
 Gene Math
 ~~~~~~~~~
