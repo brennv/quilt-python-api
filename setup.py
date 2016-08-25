@@ -7,8 +7,8 @@ def readme():
 
 
 setup(
-    name='quiltdata',
-    packages=['quiltdata'],
+    name='quilt',
+    packages=['quilt'],
     version='0.1.0',
     description='Quilt Python API https://quiltdata.com',
     long_description=readme(),
@@ -24,9 +24,9 @@ setup(
         'Programming Language :: Python :: 3.5',
         # for more options see https://pypi.python.org/pypi?%3Aaction=list_classifiers
     ],
-    author='Kevin Moore',
-    author_email='???@???.com',  # same as you regestered
-    license='???',  # you will probably have to add a LICENSE.txt to the repo
+    author='quiltdata',
+    author_email='founders@quiltdata.io',  # same as you regestered
+    license='LICENSE.txt',  # you will probably have to add a LICENSE.txt to the repo
     url='https://github.com/quiltdata/API',
     download_url='https://github.com/quiltdata/API/tarball/0.1.0',
     keywords='quiltdata api social shareable data platform',
@@ -36,7 +36,6 @@ setup(
         'pandas',
         'psycopg2',
         'sqlalchemy',
-        # probably more
     ],
     include_package_data=True,
     zip_safe=False)
