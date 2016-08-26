@@ -255,6 +255,12 @@ The Quilt Python connector uses the Quilt REST API and SQL Alchemy
 sets in Quilt. Quilt tables are available as dictionaries or Pandas
 (http://pandas.pydata.org/) DataFrames.
 
+The Quilt Python connector is available via PyPI:
+https://pypi.python.org/pypi/quilt
+
+.. code:: shell
+    pip install quilt
+
 Connection
 ----------
 
