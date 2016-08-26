@@ -259,7 +259,9 @@ The Quilt Python connector is available via PyPI:
 https://pypi.python.org/pypi/quilt
 
 .. code:: python
+
     pip install quilt
+
 
 Connection
 ----------
