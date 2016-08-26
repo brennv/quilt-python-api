@@ -258,7 +258,7 @@ sets in Quilt. Quilt tables are available as dictionaries or Pandas
 The Quilt Python connector is available via PyPI:
 https://pypi.python.org/pypi/quilt
 
-.. code:: shell
+.. code:: python
     pip install quilt
 
 Connection
