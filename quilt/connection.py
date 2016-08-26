@@ -150,7 +150,8 @@ class Connection(object):
                      'int16' : 'Number',
                      'int32' : 'Number',
                      'int64' : 'Number',
-                     'unicode' : 'String' }
+                     'unicode' : 'String',
+                     'datetime64[ns, UTC]' : 'DateTime' }
         
         if not PANDAS:
             print "Install pandas to use DataFrames: http://pandas.pydata.org/"
@@ -180,10 +181,14 @@ class Connection(object):
             print response.text
             return None
 
-        response = table.create(df.to_dict('records').values())
-        if response.status_code != requests.codes.ok:
-            print "Oops, something went wrong."
-            print response.text
+        chunksz = 500
+        nrows = len(df.index)
+        for start in range(0, nrows, chunksz):
+            end = start + chunksz
+            response = table.create_json(df[start:end].to_json(orient='records'))
+            if response.status_code != requests.codes.ok:
+                print "Oops, something went wrong."
+                print response.text
 
         return table
 
