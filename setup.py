@@ -9,7 +9,7 @@ def readme():
 setup(
     name='quilt',
     packages=['quilt'],
-    version='0.1.2',
+    version='0.1.3',
     description='Quilt Python API https://quiltdata.com',
     long_description=readme(),
     classifiers=[

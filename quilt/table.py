@@ -338,6 +338,15 @@ class Table(object):
 
         return response
 
+    def create_json(self, jsondata):
+        response = requests.post("%s/data/%s/rows/" % (self.connection.url, self.id),
+                                 data = jsondata,
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+
+        return response
+
+
     def create_async(self, data, callback=None):
         """
         Use an asynchronous POST request with the process pool.
