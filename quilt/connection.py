@@ -8,6 +8,7 @@ from multiprocessing import Pool
 
 from .lib import *
 from .table import *
+from .util import *
 
 class Connection(object):
     

@@ -1,5 +1,6 @@
 
 from lib import *
+from .util import *
 
 def make_post_request(url, data, auth):
     response = None
@@ -210,10 +211,8 @@ class Table(object):
         else:
             data = []
             index = []
-            columns = [c['sqlname'] for c in self.columns]
+            columns = [c.field for c in self.columns]
             for i, row in enumerate(self):
-                if limit and i>limit:
-                    break
                 index.append(row['qrid'])
                 data.append(row)
             return pd.DataFrame(data, columns=columns, index=index)
@@ -247,18 +246,25 @@ class Table(object):
             print "Chromosome, start, stop columns not found in table %s." % b.name
             return
 
-        data = { 'left_chr' : a_chr,
-                 'left_start' : a_start,
-                 'left_end' : a_end,
-                 'right_chr' : b_chr,
-                 'right_start' : b_start,
-                 'right_end' : b_end,
+        data = { 'left_chr' : a_chr.id,
+                 'left_start' : a_start.id,
+                 'left_end' : a_end.id,
+                 'right_chr' : b_chr.id,
+                 'right_start' : b_start.id,
+                 'right_end' : b_end.id,
                  'operator' : operator }
         response = requests.post("%s/genemath/" % self.connection.url,
                                  data = json.dumps(data),
                                  headers=HEADERS,
                                  auth=self.connection.auth)
-        return response
+        if response.status_code == requests.codes.ok:
+            data = response.json()
+            result_table_id = data.get('table')
+            result = self.connection.get_table(result_table_id)
+            return result
+        else:
+            print "Oops, something went wrong"
+            return response
 
     def export(self):
         response = requests.get("%s/data/%s/rows/export" % (self.connection.url, self.id),
@@ -398,26 +404,3 @@ class Table(object):
     def intersect_wao(self, b):
         return self._genemath(b, 'Intersect_WAO')
 
-    def intersect(self, b):
-        a_chr, a_start, a_end = self.get_bed_cols()
-        if not (a_chr and a_start and a_end):
-            print "Chromosome, start, stop columns not found."
-            return
-    
-        b_chr, b_start, b_end = b.get_bed_cols()
-        if not (b_chr and b_start and b_end):
-            print "Chromosome, start, stop columns not found in table %s." % b.name
-            return
-
-        data = { 'left_chr' : a_chr,
-                 'left_start' : a_start,
-                 'left_end' : a_end,
-                 'right_chr' : b_chr,
-                 'right_start' : b_start,
-                 'right_end' : b_end,
-                 'operator' : 'Intersect' }
-        response = requests.post("%s/genemath/" % self.connection.url,
-                                 data = json.dumps(data),
-                                 headers=HEADERS,
-                                 auth=self.connection.auth)
-        return response
