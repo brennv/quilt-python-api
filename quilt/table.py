@@ -357,6 +357,16 @@ class Table(object):
                                                             callback=callback)
         return res
 
+    def create_json_async(self, jsondata, callback=None):
+        """
+        Use an asynchronous POST request with the process pool.
+        """
+        url = "%s/data/%s/rows/" % (self.connection.url, self.id)
+        res = self.connection.get_thread_pool().apply_async(make_post_request,
+                                                            args=(url, jsondata, self.connection.auth),
+                                                            callback=callback)
+        return res
+
     def quilt(self, left_column, right_column):
         data = {}
         data['left_table'] = self.id
