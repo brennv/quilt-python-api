@@ -10,6 +10,11 @@ from .lib import *
 from .table import *
 from .util import *
 
+def status_check(response):
+    if response.status_code != requests.codes.ok:
+        print "Warning: server responded with %s" % response.status_code
+
+
 class Connection(object):
     
     def __init__(self, username, url=QUILT_URL):
@@ -182,15 +187,29 @@ class Connection(object):
             print response.text
             return None
 
-        chunksz = 500
+        chunksz = 250
+        maxreq = 40
         nrows = len(df.index)
+        res = []
         for start in range(0, nrows, chunksz):
             end = start + chunksz
-            response = table.create_json(df[start:end].to_json(orient='records'))
-            if response.status_code != requests.codes.ok:
-                print "Oops, something went wrong."
-                print response.text
 
+            while len(res) > maxreq:
+                finished = [(r, b) for r, b in res if r.ready()]
+                res[:] = [(r, b) for r, b in res if not r.ready()]
+                for r, b in finished:
+                    if not r.successful():
+                        print "Retrying:"
+                        print b
+                        res.append((t.create_async(b, status_check), b))                        
+                if len(res) > maxreq:
+                    r, b = res[0]
+                    r.wait()
+                    
+            buffer = df[start:end].to_json(orient='records')
+            res.append((table.create_json_async(buffer, callback=status_check), buffer))
+            
+            
         return table
 
     def upload(self, filepath):
