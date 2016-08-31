@@ -1,3 +1,5 @@
+from .lib import *
+
 class File(object):
     def __init__(self, connection, data):
         self._data = data
