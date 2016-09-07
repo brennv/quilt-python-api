@@ -295,7 +295,8 @@ class Table(object):
                                 headers=HEADERS,
                                 auth=self.connection.auth)
         if response.status_code == requests.codes.ok:
-            return response.json()
+            # We'll need to handle paging for large commit histories
+            return response.json()['results']
         else:
             print "Oops, something went wrong."
             return response

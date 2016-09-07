@@ -1,45 +1,3 @@
-Convert files to live data sets on Quilt
-========================================
-
-Optional prep (your steps may vary)
------------------------------------
-
-#. Get a list of files you want to upload (see ``get-files-to-upload/``)
-#. Download the files in the list (see ``curl-all.py``)
-#. Unzip downloaded files (if needed)
-
-   .. code:: bash
-
-       cd downloads
-       gunzip *.gz
-
-   .. rubric:: Upload to Quilt
-      :name: upload-to-quilt
-
-#. | Use ``data_set.py`` to create individual data sets (see
-     ``python data_set.py --help``).
-   | You will need a Quilt username and password. Or use ``batch.py`` to
-     create multiple data sets.
-
-   .. code:: bash
-
-       python data_set.py
-         -e https://quiltdata.com
-         -u USERNAME
-         -n "ENCODE data"
-         -d "#A549 #histone peak data #hg19"
-         -f downloads/wgEncodeBroadHistoneNhaH3k36me3StdPk.broadPeak
-
-File formats in this example
-----------------------------
-
--  `ENCDOE broadPeak format`_
-
-Resources
----------
-
--  `ENCODE Project`_
-
 REST API
 ========
 
@@ -442,3 +400,45 @@ and subtracted.
     result = tableA.intersect(tableB)
     result = tableA.intersect_wao(tableB)
     result = tableA.subtract(tableB)
+
+Convert files to live data sets on Quilt
+========================================
+
+Optional prep (your steps may vary)
+-----------------------------------
+
+#. Get a list of files you want to upload (see ``get-files-to-upload/``)
+#. Download the files in the list (see ``curl-all.py``)
+#. Unzip downloaded files (if needed)
+
+   .. code:: bash
+
+       cd downloads
+       gunzip *.gz
+
+   .. rubric:: Upload to Quilt
+      :name: upload-to-quilt
+
+#. | Use ``data_set.py`` to create individual data sets (see
+     ``python data_set.py --help``).
+   | You will need a Quilt username and password. Or use ``batch.py`` to
+     create multiple data sets.
+
+   .. code:: bash
+
+       python data_set.py
+         -e https://quiltdata.com
+         -u USERNAME
+         -n "ENCODE data"
+         -d "#A549 #histone peak data #hg19"
+         -f downloads/wgEncodeBroadHistoneNhaH3k36me3StdPk.broadPeak
+
+File formats in this example
+----------------------------
+
+-  `ENCDOE broadPeak format`_
+
+Resources
+---------
+
+-  `ENCODE Project`_
