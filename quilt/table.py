@@ -289,6 +289,36 @@ class Table(object):
         self._limit = limit
         return self
 
+    @property
+    def commits(self):
+        response = requests.get("%s/data/%s/commits/" % (self.connection.url, self.id),
+                                headers=HEADERS,
+                                auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            # We'll need to handle paging for large commit histories
+            return response.json()['results']
+        else:
+            print "Oops, something went wrong."
+            return response
+
+    def commit(self, message):
+        data = {'message' : message}
+        response = requests.post("%s/data/%s/commits/" % (self.connection.url, self.id),
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+
+    def checkout(self, commit):
+        data = {}
+        response = requests.post("%s/data/%s/commits/%s/checkout/" % (self.connection.url, self.id, commit),
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            self.__iter__()
+        else:
+            print response.text
+
     def _reset_iteration(self):
         self._buffer = []
         self._limit = None
