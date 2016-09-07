@@ -1,210 +1,3 @@
-REST API
-========
-
-+--------------------------------+--------------------------------------+-------------------------------------------+
-| Action                         | Endpoint                             | Details                                   |
-+================================+======================================+===========================================+
-| New table                      | ``POST /tables/``                    | `See below`_                              |
-+--------------------------------+--------------------------------------+-------------------------------------------+
-| Delete table                   | ``DELETE /tables/TABLE_ID/``         | `See below <#delete-table>`__             |
-+--------------------------------+--------------------------------------+-------------------------------------------+
-| Update table meta-data         | ``PATCH /tables/TABLE_ID``           | `See below <#update-table-meta-data>`__   |
-+--------------------------------+--------------------------------------+-------------------------------------------+
-| Add column to table            | ``POST /tables/TABLE_ID/columns/``   | `See below <#add-column-to-table>`__      |
-+--------------------------------+--------------------------------------+-------------------------------------------+
-| Append row to table            | ``POST /data/TABLE_ID/rows/``        | `See below <#append-row>`__               |
-+--------------------------------+--------------------------------------+-------------------------------------------+
-| Get table rows                 | ``GET /data/TABLE_ID/rows``          | `See below <#get-rows>`__                 |
-+--------------------------------+--------------------------------------+-------------------------------------------+
-| Get table row                  | ``GET /data/TABLE_ID/rows/ROW_ID``   | `See below <#get-row>`__                  |
-+--------------------------------+--------------------------------------+-------------------------------------------+
-| Genome intersect or subtract   | ``POST /genemath/``                  | `See below <#intersect-or-subtract>`__    |
-+--------------------------------+--------------------------------------+-------------------------------------------+
-
-Notes
-
--  For all REST calls, the content-type is ``application/JSON``.
--  Description fields automatically linkify URLs and support
-   ``<a>, <i>, <em>, <strong>, <b>`` tags
-
-Tables
-------
-
-Create table
-~~~~~~~~~~~~
-
-``POST /tables/``
-
-Data format
-^^^^^^^^^^^
-
-.. code:: javascript
-
-    {
-      'name': string,
-      'description': text `<a>, <i>, <em>, <strong>, <b>` tags supported; automatic linkification of URLs
-      'columns': [
-        {
-          'name': string,
-          'sqlname': optional string,
-          'description': optional text,
-          'type' : one of 'String', 'Number', 'Image', 'Text'
-        },
-        ...
-      ]
-    }
-
-Returns
-^^^^^^^
-
-Table data as JSON object, includes ``id`` field with the table’s
-identifier.
-
-Add column to table
-~~~~~~~~~~~~~~~~~~~
-
-``POST /tables/TABLE_ID/columns/``
-
-Data format
-^^^^^^^^^^^
-
-.. code:: javascript
-
-    {
-       'name': string,
-       'sqlname': optional string,
-       'description': text,
-       'type': one of 'String', 'Number', 'Image', or 'Text'
-    }
-
-Returns
-^^^^^^^
-
-Column data as JSON object, includes ``id`` field with the column’s
-identifier.
-
-Delete table
-~~~~~~~~~~~~
-
-``DELETE /tables/TABLE_ID``
-
-Update table meta-data
-~~~~~~~~~~~~~~~~~~~~~~
-
-``PATCH /tables/TABLE_ID``
-
-Data format
-^^^^^^^^^^^
-
-.. code:: javascript
-
-    {
-       'name': string,
-       'description': text
-    }
-
-Table Data
-----------
-
--  Use column ``sqlname`` as keys in input data
-
-Append row
-~~~~~~~~~~
-
-``POST /data/TABLE_ID/rows/``
-
-Data format
-^^^^^^^^^^^
-
-.. code:: javascript
-
-    [
-      {columnSqlname0: value0, columnSqlname1 : value1, ... },
-      ...
-    ]
-
-Get rows
-~~~~~~~~
-
-``GET /data/TABLE_ID/rows`` \* Rows are keyed by the Quilt Row ID field
-``qrid`` \* NOTE: Currently limited to the first 500 rows
-
-Returns
-^^^^^^^
-
-Row data as JSON object, keyed by column.sqlname.
-
-Get row
-~~~~~~~
-
-``GET /data/TABLE_ID/rows/ROW_ID``
-
-Returns
-^^^^^^^
-
-Row data as JSON object, keyed by column.sqlname.
-
-Quilt tables
-------------
-
-Join
-~~~~
-
-``POST /quilts/`` #### Data format
-
-.. code:: javascript
-
-    {
-      'left_table_id': int,
-      'right_table_id': int,
-      'left_column_id': int,
-      'right_column_id': int,
-      'jointype': one of 'inner', 'leftOuter', 'firstMatch'
-    }
-
-Returns
-^^^^^^^
-
-Quilt info as JSON object, includes ``sqlname`` field with the quilt’s
-identifier.
-
-Undo join
-~~~~~~~~~
-
-``DELETE /quilts/QUILT_SQLNAME``
-
-Genome Math
------------
-
--  Performs a gene math operation on two tables
--  Creates a new table with the result.
--  Columns are specified by ``column.id``.
-
-Intersect or subtract
-~~~~~~~~~~~~~~~~~~~~~
-
-``POST /genemath/``
-
-Data Format
-^^^^^^^^^^^
-
-.. code:: javascript
-
-    {
-      'operator': one of 'Intersect' or 'Subtract',
-      'left_chr': integer (column id),
-      'left_start': integer (column id),
-      'left_end':  integer (column id),
-      'right_chr':  integer (column id),
-      'right_start': integer (column id),
-      'right_end':  integer (column id)
-    }
-
-Returns
-^^^^^^^
-
-JSON object representing the result table.
-
 Python
 ======
 
@@ -442,3 +235,210 @@ Resources
 ---------
 
 -  `ENCODE Project`_
+
+REST API
+========
+
++--------------------------------+--------------------------------------+-------------------------------------------+
+| Action                         | Endpoint                             | Details                                   |
++================================+======================================+===========================================+
+| New table                      | ``POST /tables/``                    | `See below`_                              |
++--------------------------------+--------------------------------------+-------------------------------------------+
+| Delete table                   | ``DELETE /tables/TABLE_ID/``         | `See below <#delete-table>`__             |
++--------------------------------+--------------------------------------+-------------------------------------------+
+| Update table meta-data         | ``PATCH /tables/TABLE_ID``           | `See below <#update-table-meta-data>`__   |
++--------------------------------+--------------------------------------+-------------------------------------------+
+| Add column to table            | ``POST /tables/TABLE_ID/columns/``   | `See below <#add-column-to-table>`__      |
++--------------------------------+--------------------------------------+-------------------------------------------+
+| Append row to table            | ``POST /data/TABLE_ID/rows/``        | `See below <#append-row>`__               |
++--------------------------------+--------------------------------------+-------------------------------------------+
+| Get table rows                 | ``GET /data/TABLE_ID/rows``          | `See below <#get-rows>`__                 |
++--------------------------------+--------------------------------------+-------------------------------------------+
+| Get table row                  | ``GET /data/TABLE_ID/rows/ROW_ID``   | `See below <#get-row>`__                  |
++--------------------------------+--------------------------------------+-------------------------------------------+
+| Genome intersect or subtract   | ``POST /genemath/``                  | `See below <#intersect-or-subtract>`__    |
++--------------------------------+--------------------------------------+-------------------------------------------+
+
+Notes
+
+-  For all REST calls, the content-type is ``application/JSON``.
+-  Description fields automatically linkify URLs and support
+   ``<a>, <i>, <em>, <strong>, <b>`` tags
+
+Tables
+------
+
+Create table
+~~~~~~~~~~~~
+
+``POST /tables/``
+
+Data format
+^^^^^^^^^^^
+
+.. code:: javascript
+
+    {
+      'name': string,
+      'description': text `<a>, <i>, <em>, <strong>, <b>` tags supported; automatic linkification of URLs
+      'columns': [
+        {
+          'name': string,
+          'sqlname': optional string,
+          'description': optional text,
+          'type' : one of 'String', 'Number', 'Image', 'Text'
+        },
+        ...
+      ]
+    }
+
+Returns
+^^^^^^^
+
+Table data as JSON object, includes ``id`` field with the table’s
+identifier.
+
+Add column to table
+~~~~~~~~~~~~~~~~~~~
+
+``POST /tables/TABLE_ID/columns/``
+
+Data format
+^^^^^^^^^^^
+
+.. code:: javascript
+
+    {
+       'name': string,
+       'sqlname': optional string,
+       'description': text,
+       'type': one of 'String', 'Number', 'Image', or 'Text'
+    }
+
+Returns
+^^^^^^^
+
+Column data as JSON object, includes ``id`` field with the column’s
+identifier.
+
+Delete table
+~~~~~~~~~~~~
+
+``DELETE /tables/TABLE_ID``
+
+Update table meta-data
+~~~~~~~~~~~~~~~~~~~~~~
+
+``PATCH /tables/TABLE_ID``
+
+Data format
+^^^^^^^^^^^
+
+.. code:: javascript
+
+    {
+       'name': string,
+       'description': text
+    }
+
+Table Data
+----------
+
+-  Use column ``sqlname`` as keys in input data
+
+Append row
+~~~~~~~~~~
+
+``POST /data/TABLE_ID/rows/``
+
+Data format
+^^^^^^^^^^^
+
+.. code:: javascript
+
+    [
+      {columnSqlname0: value0, columnSqlname1 : value1, ... },
+      ...
+    ]
+
+Get rows
+~~~~~~~~
+
+``GET /data/TABLE_ID/rows`` \* Rows are keyed by the Quilt Row ID field
+``qrid`` \* NOTE: Currently limited to the first 500 rows
+
+Returns
+^^^^^^^
+
+Row data as JSON object, keyed by column.sqlname.
+
+Get row
+~~~~~~~
+
+``GET /data/TABLE_ID/rows/ROW_ID``
+
+Returns
+^^^^^^^
+
+Row data as JSON object, keyed by column.sqlname.
+
+Quilt tables
+------------
+
+Join
+~~~~
+
+``POST /quilts/`` #### Data format
+
+.. code:: javascript
+
+    {
+      'left_table_id': int,
+      'right_table_id': int,
+      'left_column_id': int,
+      'right_column_id': int,
+      'jointype': one of 'inner', 'leftOuter', 'firstMatch'
+    }
+
+Returns
+^^^^^^^
+
+Quilt info as JSON object, includes ``sqlname`` field with the quilt’s
+identifier.
+
+Undo join
+~~~~~~~~~
+
+``DELETE /quilts/QUILT_SQLNAME``
+
+Genome Math
+-----------
+
+-  Performs a gene math operation on two tables
+-  Creates a new table with the result.
+-  Columns are specified by ``column.id``.
+
+Intersect or subtract
+~~~~~~~~~~~~~~~~~~~~~
+
+``POST /genemath/``
+
+Data Format
+^^^^^^^^^^^
+
+.. code:: javascript
+
+    {
+      'operator': one of 'Intersect' or 'Subtract',
+      'left_chr': integer (column id),
+      'left_start': integer (column id),
+      'left_end':  integer (column id),
+      'right_chr':  integer (column id),
+      'right_start': integer (column id),
+      'right_end':  integer (column id)
+    }
+
+Returns
+^^^^^^^
+
+JSON object representing the result table.
