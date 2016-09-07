@@ -221,7 +221,11 @@ class Table(object):
         response = requests.get("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
                                 headers=HEADERS,
                                 auth=self.connection.auth)
-        return response.json()
+        if response.status_code == requests.codes.ok:
+            return response.json()
+        else:
+            print "Oops, something went wrong."
+            return response
 
     def __delitem__(self, qrid):
         response = requests.delete("%s/data/%s/rows/%s" % (self.connection.url, self.id, qrid),
