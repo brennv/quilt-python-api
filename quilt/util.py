@@ -58,3 +58,38 @@ class Quilt(object):
             self.id = None
         return response.status_code
 
+
+class Branch(object):
+    def __init__(self, table, data):
+        self.table = table
+        self.__id = data['id']
+        assert self.table.id == data['table']
+        self.name = data['name']
+        self.head = data['head']
+
+    def delete(self):
+        if not self.__id:
+            return requests.codes.not_found
+        
+        connection = self.table.connection
+        response = requests.delete("%s/data/%s/branches/%s/" % (connection.url,
+                                                                self.table.id,
+                                                                self.name),
+                                   headers=HEADERS,
+                                   auth=connection.auth)
+        if response.status_code == requests.codes.no_content:
+            self.__id = None
+            self.name = None
+        return response.status_code
+
+    def merge(self, other):
+        data = {'name' : other.name}
+        connection = self.table.connection
+        response = requests.post("%s/data/%s/branches/%s/merge" % (connection.url,
+                                                                   self.table.id,
+                                                                   self.name),
+                                 data=json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=connection.auth)
+        return response
+        

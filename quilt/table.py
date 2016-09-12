@@ -46,6 +46,7 @@ class Table(object):
     _chr = None
     _start = None
     _end = None
+    branch = None
     
     def __init__(self, con, id, name, sqlname, description, owner, is_public):
         self.nextlink = None
@@ -58,7 +59,7 @@ class Table(object):
         self.is_public = is_public
         self._reset_iteration()
 
-    def __init__(self, con, data):
+    def __init__(self, con, data, branch=None):
         self.connection = con
         self.id = data.get('id')
         self.name = data.get('name')
@@ -67,6 +68,7 @@ class Table(object):
         self.owner = data.get('owner')
         self.is_public = data.get('is_public')
         self._reset_iteration()
+        self.branch = branch
         
         if data.has_key('columns'):
             self._schema = [Column(self, cdata) for cdata in data.get('columns')]
@@ -236,7 +238,10 @@ class Table(object):
     def __iter__(self):
         self._buffer = []
         self._generator = rowgen(self._buffer)
-        self.nextlink = "%s/data/%s/rows/" % (self.connection.url, self.id)
+        if self.branch:
+            self.nextlink = "%s/data/%s/branches/%s/rows/" % (self.connection.url, self.id, self.branch)
+        else:
+            self.nextlink = "%s/data/%s/rows/" % (self.connection.url, self.id)
         return self
 
     def _genemath(self, b, operator):
@@ -312,6 +317,24 @@ class Table(object):
                                  headers=HEADERS,
                                  auth=self.connection.auth)
 
+    def create_branch(self, name, parent=None):
+        data = {'table_id' : self.id,
+                'name' : name}
+        if parent:
+            data['parent'] = parent
+            
+        response = requests.post("%s/data/%s/branches/" % (self.connection.url, self.id),
+                                 data = json.dumps(data),
+                                 headers=HEADERS,
+                                 auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            self.__iter__()
+            self.branch = name
+        else:
+            print "Oops, something went wrong."
+
+        return response
+
     def checkout(self, commit):
         data = {}
         response = requests.post("%s/data/%s/commits/%s/checkout/" % (self.connection.url, self.id, commit),
@@ -321,7 +344,8 @@ class Table(object):
         if response.status_code == requests.codes.ok:
             self.__iter__()
         else:
-            print response.text
+            print "Oops, something went wrong."
+            return response
 
     def _reset_iteration(self):
         self._buffer = []
@@ -371,10 +395,18 @@ class Table(object):
                 raise StopIteration()
 
     def create(self, data):
-        response = requests.post("%s/data/%s/rows/" % (self.connection.url, self.id),
-                                 data = json.dumps(data),
-                                 headers=HEADERS,
-                                 auth=self.connection.auth)
+        if self.branch:
+            response = requests.post("%s/data/%s/branches/%s/rows/" % (self.connection.url,
+                                                                       self.id,
+                                                                       self.branch),
+                                     data = json.dumps(data),
+                                     headers=HEADERS,
+                                     auth=self.connection.auth)
+        else:
+            response = requests.post("%s/data/%s/rows/" % (self.connection.url, self.id),
+                                     data = json.dumps(data),
+                                     headers=HEADERS,
+                                     auth=self.connection.auth)
 
         return response
 
