@@ -300,7 +300,8 @@ class Table(object):
 
     @property
     def commits(self):
-        response = requests.get("%s/data/%s/commits/" % (self.connection.url, self.id),
+        branch = self.branch if self.branch else 'master'
+        response = requests.get("%s/data/%s/branches/%s/commits/" % (self.connection.url, self.id, branch),
                                 headers=HEADERS,
                                 auth=self.connection.auth)
         if response.status_code == requests.codes.ok:
@@ -311,8 +312,9 @@ class Table(object):
             return response
 
     def commit(self, message):
+        branch = self.branch if self.branch else 'master'
         data = {'message' : message}
-        response = requests.post("%s/data/%s/commits/" % (self.connection.url, self.id),
+        response = requests.post("%s/data/%s/branches/%s/commits/" % (self.connection.url, self.id, branch),
                                  data = json.dumps(data),
                                  headers=HEADERS,
                                  auth=self.connection.auth)
@@ -329,15 +331,30 @@ class Table(object):
                                  auth=self.connection.auth)
         if response.status_code == requests.codes.ok:
             self.__iter__()
-            self.branch = name
+            branch = Branch(self, response.json())
+            self.branch = branch.name
         else:
             print "Oops, something went wrong."
 
         return response
 
+    def get_branch(self, name):
+        response = requests.get("%s/data/%s/branches/%s" % (self.connection.url, self.id, name),
+                                headers=HEADERS,
+                                auth=self.connection.auth)
+        if response.status_code == requests.codes.ok:
+            return Branch(self, response.json())
+        else:
+            print "Oops, something went wrong."
+            return response                        
+
     def checkout(self, commit):
+        branch = self.branch if self.branch else 'master'
         data = {}
-        response = requests.post("%s/data/%s/commits/%s/checkout/" % (self.connection.url, self.id, commit),
+        response = requests.post("%s/data/%s/branches/%scommits/%s/checkout/" % (self.connection.url,
+                                                                                 self.id,
+                                                                                 branch,
+                                                                                 commit),
                                  data = json.dumps(data),
                                  headers=HEADERS,
                                  auth=self.connection.auth)

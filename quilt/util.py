@@ -85,7 +85,7 @@ class Branch(object):
     def merge(self, other):
         data = {'name' : other.name}
         connection = self.table.connection
-        response = requests.post("%s/data/%s/branches/%s/merge" % (connection.url,
+        response = requests.post("%s/data/%s/branches/%s/merge/" % (connection.url,
                                                                    self.table.id,
                                                                    self.name),
                                  data=json.dumps(data),
