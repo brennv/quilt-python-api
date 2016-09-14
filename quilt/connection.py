@@ -38,7 +38,7 @@ class Connection(object):
             self.userid = userdata['id']
             self.profile = userdata['profile']
             if SQLALCHEMY:
-                self._sqlengine = sa.create_engine(self.profile.get('odbc').get('url'))
+                self._sqlengine = sa.create_engine(userdata.get('odbc').get('url'))
         else:
             print "Login Failed. Please check your credentials and try again."
 
@@ -107,13 +107,13 @@ class Connection(object):
                 self._files = []
         return self._files
 
-    def get_table(self, table_id):
+    def get_table(self, table_id, branch=None):
         response = requests.get("%s/tables/%s/" % (self.url, table_id),
                                 headers=HEADERS,
                                 auth=self.auth)        
         
         if response.status_code == requests.codes.ok:
-            return Table(self, response.json())
+            return Table(self, response.json(), branch=branch)
         else:
             print "Oops, something went wrong."
             print response.text
