@@ -38,7 +38,7 @@ class Connection(object):
             self.userid = userdata['id']
             self.profile = userdata['profile']
             if SQLALCHEMY:
-                self._sqlengine = sa.create_engine(userdata.get('odbc').get('url'))
+                self._sqlengine = sa.create_engine(userdata['profile']['odbc']['url'])
         else:
             print "Login Failed. Please check your credentials and try again."
 
