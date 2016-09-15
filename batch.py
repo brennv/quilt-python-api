@@ -36,7 +36,7 @@ def process(argv):
     name = 'ENCODE ChIP-seq: ' + ' '.join(pretags)
     tags = map(lambda x: '#' + x, CORE_TAGS + pretags)
     description = ' '.join(tags) + '\n' + CORE_DESC
-    args = "-u USERNAME -n '%s' -d '%s' -f downloads/%s -p True -x '%s'" % (name, description, l, passwd)
+    args = "-u USERNAME -n '%s' -d '%s' -f downloads/%s -p '%s' -x '%s'" % (name, description, l, PUBLIC, passwd)
     argv = shlex.split(args)
     #create data set on Quilt 
     dataset.create(argv)
