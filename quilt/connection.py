@@ -174,7 +174,7 @@ class Connection(object):
                 print "Oops, unrecognized type %s in Data Frame" % dt
                 return None
             
-            schema['columns'].append({'name' : col, 'type' : ctype }) 
+            schema['columns'].append({'name' : col, 'sqlname' : col, 'type' : ctype }) 
 
         response = requests.post("%s/tables/" % self.url,
                                  data = json.dumps(schema),
@@ -191,6 +191,7 @@ class Connection(object):
         maxreq = 40
         nrows = len(df.index)
         res = []
+        
         for start in range(0, nrows, chunksz):
             end = start + chunksz
 
@@ -208,8 +209,7 @@ class Connection(object):
                     
             buffer = df[start:end].to_json(orient='records')
             res.append((table.create_json_async(buffer, callback=status_check), buffer))
-            
-            
+                        
         return table
 
     def upload(self, filepath):

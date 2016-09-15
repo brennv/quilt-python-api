@@ -193,7 +193,8 @@ class Table(object):
                 'Image' : sa.String }
             
             columns = [sa.Column(c.field, type_map[c.type]) for c in self.columns]
-            table = sa.Table(self.sqlname, sa.MetaData(),*columns)
+            viewname = "%s_%s" % (self.sqlname, self.branch) if self.branch else self.sqlname
+            table = sa.Table(viewname, sa.MetaData(),*columns)
 
             stmt = sa.select([table])
             if self._ordering_fields:
