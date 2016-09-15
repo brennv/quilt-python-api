@@ -229,12 +229,12 @@ Optional prep (your steps may vary)
 File formats in this example
 ----------------------------
 
--  `ENCDOE broadPeak format`_
+-  `ENCODE broadPeak format <https://genome.ucsc.edu/FAQ/FAQformat.html#format13>`_
 
 Resources
 ---------
 
--  `ENCODE Project`_
+-  `ENCODE Project <https://www.encodeproject.org/>`_
 
 REST API
 ========
