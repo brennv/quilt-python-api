@@ -442,3 +442,14 @@ Returns
 ^^^^^^^
 
 JSON object representing the result table.
+
+Development
+-----------
+
+Python 2.7 tests in-progress. Tests run with:
+
+.. code:: python
+
+    pip install -r requirements.text
+    pip install pytest
+    pytest tests
