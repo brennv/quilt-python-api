@@ -209,10 +209,7 @@ Optional prep (your steps may vary)
        cd downloads
        gunzip *.gz
 
-   .. rubric:: Upload to Quilt
-      :name: upload-to-quilt
-
-#. | Use ``data_set.py`` to create individual data sets (see
+#. | Use ``data_set.py`` to create data sets on Quilt (see
      ``python data_set.py --help``).
    | You will need a Quilt username and password. Or use ``batch.py`` to
      create multiple data sets.
