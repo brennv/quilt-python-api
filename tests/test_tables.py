@@ -61,10 +61,12 @@ def test_create_table_from_file():
     rows = [row for row in t1]
     # expected_row1 = {fields[0]: 1, fields[1]: 'a', u'qgrid': 1}
     # expected_row2 = {fields[0]: 2, fields[1]: 'b', u'qgrid': 2}
-    # assert rows == [expected_row1, expected_row2]
-    assert rows[0][fields[0]] == 1.0  # should be integer?
+    # assert rows == [expected_row1, expected_row2]  # this fails
+    assert rows[0][fields[0]] == 1
+    # assert isinstance(rows[0][fields[0]], int)  # this fails, it's 1.0 not 1
     assert rows[0][fields[1]] == 'a'
-    assert rows[1][fields[0]] == 2.0
+    assert rows[1][fields[0]] == 2
+    # assert isinstance(rows[1][fields[0]], int)  # this fails, it's 2.0 not 2
     assert rows[1][fields[1]] == 'b'
     t2 = conn.get_table(t1.id)
     assert t1 == t2
