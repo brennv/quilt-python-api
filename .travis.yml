@@ -1,0 +1,15 @@
+language: python
+python:
+- '2.7'
+
+env:
+  global:
+    - secure: CUtSldmJk7y2PpimxpOWKNi30Ve/pQuzSrGxQyvBE3ny8nTFjzIK+DUcqCVgNDmCqm3AAkE/DsMyCgRCxTpXGW35mhEyCCUlqPlULgGBoBdx5KtMbgOHq+W/+R1utrmliS5N6GexcydAMQ/CaepKdpeyf0fgpLFes6J1WYG/2JGErHS5Vvbprv9E8UMuG7WoSJXtvSK6Cnz06wWVfGkvw5nLbftuCTfKgCzXU5CK6lFUQlDqJwC6bqsuuGCiWI34OnDmbThHZkNG7JfEapIdeWMoHR93LodviShuiGxhpS/WDewGEwzHXmys6oo6Z9/kLJdcJOCmxdFvYWQUGNxDwOSSFpOjKNXIUR4n6rfqOwarPzRGWQd4C7NLKjkiMymBk1qb016+wlGsicFBktPNV5O9KLL6aytRP34Q30yuAhqcQufVw37G3CdsEKEO6rXghIG81RP2AH64fC12TG29gnQmZQTW1Yv99J61X1+jsCAVVcx1rISO5JYRvMWCBuJK0Arpsjj0PE41/3yUT72TgPRZGeh1wDOvl6SCGNgo5xYoMzdhsoCxm//9rYTW/3HmEUtB59+9M9E9+IZnaT+vN+sWOAElPDEsgu1Kn90GIADfQ/wL8B0pstrVrL2zZSrqCyJxlxE2frq4yNJo74hMizE+QTy2fKumtljLN2x7WZM=
+  matrix:
+    - QUILT_URL="https://quiltdata.com"
+    - QUILT_URL="https://quilt-heroku.herokuapp.com"
+
+before_install: pip install pytest pytest-cov
+install: pip install -r requirements.txt
+script: python -m pytest --cov=quilt/ tests
+after_success: bash <(curl -s https://codecov.io/bash)
