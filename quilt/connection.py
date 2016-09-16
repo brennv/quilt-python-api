@@ -1,7 +1,8 @@
 import json
-import getpass
+from getpass import getpass
 import requests
 import sys
+import os
 
 from mimetypes import MimeTypes
 from multiprocessing import Pool
@@ -16,11 +17,11 @@ def status_check(response):
 
 
 class Connection(object):
-    
+
     def __init__(self, username, url=QUILT_URL):
         self.url = url
         self.username = username
-        self.password = getpass.getpass()
+        self.password = os.environ.get('QUILT_PASSWORD') or getpass()
         self.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
         self.status_code = None
         self.userid = None
@@ -38,7 +39,7 @@ class Connection(object):
             self.userid = userdata['id']
             self.profile = userdata['profile']
             if SQLALCHEMY:
-                self._sqlengine = sa.create_engine(userdata.get('odbc').get('url'))
+                self._sqlengine = sa.create_engine(userdata['odbc']['url'])
         else:
             print "Login Failed. Please check your credentials and try again."
 
@@ -71,7 +72,7 @@ class Connection(object):
             print "Oops, something went wrong."
             print "response=%s" % response.status_code
 
-        return matches        
+        return matches
 
     @property
     def tables(self):
@@ -110,8 +111,8 @@ class Connection(object):
     def get_table(self, table_id, branch=None):
         response = requests.get("%s/tables/%s/" % (self.url, table_id),
                                 headers=HEADERS,
-                                auth=self.auth)        
-        
+                                auth=self.auth)
+
         if response.status_code == requests.codes.ok:
             return Table(self, response.json(), branch=branch)
         else:
@@ -127,7 +128,7 @@ class Connection(object):
             if columns:
                 print "Please specify either a set of columns or an input file, not both"
                 return None
-                
+
             if isinstance(inputfile, File):
                 data['csvfile'] = inputfile.fullpath
             else:
@@ -135,7 +136,7 @@ class Connection(object):
                 data['csvfile'] = f.fullpath
         elif columns:
             data['columns'] = columns
-            
+
         response = requests.post("%s/tables/" % self.url,
                                  data = json.dumps(data),
                                  headers=HEADERS,
@@ -158,7 +159,7 @@ class Connection(object):
                      'int64' : 'Number',
                      'unicode' : 'String',
                      'datetime64[ns, UTC]' : 'DateTime' }
-        
+
         if not PANDAS:
             print "Install pandas to use DataFrames: http://pandas.pydata.org/"
             return None
@@ -166,7 +167,7 @@ class Connection(object):
         schema = { 'name' : name, 'columns' : [] }
         if description:
             schema['description'] = description
-            
+
         for i, col in enumerate(df.columns):
             dt = df.dtypes[i]
             ctype = type_map.get(str(dt), None)
@@ -202,14 +203,13 @@ class Connection(object):
                     if not r.successful():
                         print "Retrying:"
                         print b
-                        res.append((t.create_async(b, status_check), b))                        
+                        res.append((t.create_async(b, status_check), b))
                 if len(res) > maxreq:
                     r, b = res[0]
                     r.wait()
-                    
+
             buffer = df[start:end].to_json(orient='records')
             res.append((table.create_json_async(buffer, callback=status_check), buffer))
-                        
         return table
 
     def upload(self, filepath):
