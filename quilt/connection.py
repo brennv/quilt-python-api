@@ -39,7 +39,10 @@ class Connection(object):
             self.userid = userdata['id']
             self.profile = userdata['profile']
             if SQLALCHEMY:
-                self._sqlengine = sa.create_engine(userdata['profile']['odbc']['url'])
+                if self.url == 'https://quiltdata.com':
+                    self._sqlengine = sa.create_engine(userdata['profile']['odbc']['url'])
+                if self.url == 'https://quilt-heroku.herokuapp.com'
+                    self._sqlengine = sa.create_engine(userdata['odbc']['url'])
         else:
             print "Login Failed. Please check your credentials and try again."
 
