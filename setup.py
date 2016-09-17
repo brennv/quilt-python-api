@@ -9,7 +9,7 @@ def readme():
 setup(
     name='quilt',
     packages=['quilt'],
-    version='0.1.5',
+    version='0.1.6',
     description='Quilt Python API https://quiltdata.com',
     long_description=readme(),
     classifiers=[
@@ -25,7 +25,7 @@ setup(
     author_email='founders@quiltdata.io',
     license='LICENSE.txt',
     url='https://github.com/quiltdata/API',
-    download_url='https://github.com/quiltdata/API/tarball/0.1.5',
+    download_url='https://github.com/quiltdata/API/tarball/0.1.6',
     keywords='quiltdata api social shareable data platform',
     install_requires=[
         'requests==2.11.1',
