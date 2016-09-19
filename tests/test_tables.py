@@ -1,5 +1,6 @@
 import os
 from random import randint
+import time
 from quilt import Connection
 import pandas as pd
 
@@ -51,6 +52,7 @@ def test_create_table_from_file():
     test_description = 'test file ' + test_name
     t1 = conn.create_table(name=test_name, description=test_description,
                            inputfile=test_file)
+    time.sleep(5)
     assert ['col1', 'col2'] == [col.name for col in t1.columns]
     fields = [col.field for col in t1.columns]
     rows = [row for row in t1]
