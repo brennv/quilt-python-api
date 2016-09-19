@@ -9,7 +9,8 @@ def test_connection_login_ok():
     $ export QUILT_PASSWORD="valid-password" """
     username = os.environ.get('QUILT_USERNAME')
     password = os.environ.get('QUILT_PASSWORD')
-    conn = Connection(username)
+    url = os.environ.get('QUILT_URL')
+    conn = Connection(username=username, url=url)
     assert conn.username == username
     assert conn.password == password
     assert conn.status_code == 200
